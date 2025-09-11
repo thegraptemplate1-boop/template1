@@ -80,9 +80,6 @@
     targetAngle = dir * maxAngle * speed;
 
     lastX = e.clientX;
-
-  // 블랜딩 모드 활성화 - 이중 윤곽선으로 가시성 확보
-  cursor.style.mixBlendMode = 'difference';
   }
 
   // requestAnimationFrame 루프
@@ -108,7 +105,6 @@
   // 커서가 항상 최상위에 있도록 보장
 function ensureCursorOnTop() {
   cursor.style.zIndex = '99999999';
-  cursor.style.mixBlendMode = 'difference';
 }
 
   // 이벤트 리스너 등록
@@ -124,10 +120,10 @@ function ensureCursorOnTop() {
   
   // 단일 커서로 모든 섹션에서 동일하게 작동
 
-  // 초기 커서 표시 강제
-  cursor.style.display = 'block';
-  cursor.style.opacity = '1';
-  cursor.style.visibility = 'visible';
+  // 초기 커서 표시 강제 (CSS에서 이미 설정됨)
+  // cursor.style.display = 'block';     // CSS: display: block !important
+  // cursor.style.opacity = '1';         // CSS: opacity: 1 !important  
+  // cursor.style.visibility = 'visible'; // CSS: visibility: visible !important
 
 
   // 루프 시작
@@ -487,6 +483,15 @@ window.addEventListener('load', function() {
   let ticking = false;
   const clamp01 = v => Math.max(0, Math.min(1, v));
 
+  // 초기 상태 설정 - 모든 구간에서 difference 모드로 지속
+  const customCursor = document.getElementById('custom-cursor');
+  
+  if (customCursor) {
+    // 초기에는 difference 모드로 설정
+    customCursor.style.mixBlendMode = 'difference';
+    customCursor.style.webkitMixBlendMode = 'difference';
+  }
+
   function onScroll(){
     if (!ticking){ requestAnimationFrame(update); ticking = true; }
   }
@@ -498,6 +503,16 @@ window.addEventListener('load', function() {
     const y = Math.min(Math.max(-r.top, 0), total);
                const p = y / total;                                       // 0..1
            const vh = window.innerHeight; // px 기반 계산
+
+           // 100vh 구간 감지 (비전 섹션 시작부터 100vh까지)
+           const isIn100vhZone = p >= 0 && p <= 0.1; // 0% ~ 10% (100vh 구간)
+           
+           // 모든 구간에서 difference 모드로 지속 (변수 없이)
+           if (customCursor) {
+             // 모든 구간에서 difference 모드 유지
+             customCursor.style.mixBlendMode = 'difference';
+             customCursor.style.webkitMixBlendMode = 'difference';
+           }
 
            // JavaScript로 sticky 효과 구현
            if (r.top <= 0) {
@@ -544,8 +559,8 @@ window.addEventListener('load', function() {
            });
          }
          
-         // 헤드라인은 항상 보이도록 설정
-         header.style.opacity = 1;
+         // 헤드라인은 항상 보이도록 설정 (CSS에서 이미 설정됨)
+         // header.style.opacity = 1; // CSS에서 이미 opacity: 1로 설정됨
 
              /* 2) 텍스트 채우기 (8% ~ 30% = 80vh ~ 300vh) */
          if (p >= fillStart && p <= fillEnd) {
@@ -584,7 +599,7 @@ window.addEventListener('load', function() {
 
            /* 3) Earth 배경 레이어: 마스크로 제어 (53% ~ 70% = 530vh ~ 700vh) */
          if (earthBackground) {
-           earthBackground.style.opacity = '1'; // 항상 불투명
+           // earthBackground.style.opacity = '1'; // CSS에서 이미 opacity: 1로 설정됨
            
              if (p >= earthMaskStart) {
                // 53%: 카드와 동일한 사이즈로 마스크 구멍 생성 (카드에 가려서 보이지 않음)
@@ -708,7 +723,7 @@ window.addEventListener('load', function() {
            else if (p >= earthMaskExpand) {
              card.style.opacity = '0';
            } else {
-             card.style.opacity = '1';
+             card.style.opacity = '1'; // 비전카드는 동적으로 opacity 제어 필요
              if (Math.abs(yOffset) < 0.1) {
                // 45%에서 정확히 중앙에 도달할 때 (450vh, 부동소수점 오차 고려)
                card.style.transform = `translate(-50%, -50%) scale(1)`;
@@ -816,7 +831,7 @@ window.addEventListener('load', function() {
       const cardRelativeY = index * totalCardSpace;
       const cardY = startY + cardRelativeY;
       card.style.transform = `translateY(${cardY}px)`;
-      card.style.opacity = '1';
+      // card.style.opacity = '1'; // CSS에서 이미 opacity: 1로 설정됨
     });
   }
 
@@ -925,8 +940,8 @@ window.addEventListener('load', function() {
       // 전체 그룹이 스크롤되면서 각 카드의 절대 위치
       const cardY = startY + cardRelativeY - scrollOffset;
       
-      // 투명도는 항상 1로 유지 (페이드 효과 없음)
-      card.style.opacity = '1';
+      // 투명도는 항상 1로 유지 (페이드 효과 없음) - CSS에서 이미 설정됨
+      // card.style.opacity = '1'; // CSS에서 이미 opacity: 1로 설정됨
       
       // 카드 위치 설정 (지그재그 패턴은 CSS에서 처리)
       card.style.transform = `translateY(${cardY}px)`;
@@ -940,4 +955,111 @@ window.addEventListener('load', function() {
   window.addEventListener('resize', initializeCards);
   
   window.addEventListener('scroll', onScroll, { passive: true });
+})();
+
+// 푸터 애니메이션 제어
+(function() {
+  const footerTitle = document.querySelector('.footer-title');
+  const footerContactBtn = document.querySelector('.footer-contact-btn');
+  const footerSection = document.querySelector('.footer-section');
+  
+  let hasAnimated = false; // 애니메이션 실행 여부 추적
+  
+  function animateFooter() {
+    if (hasAnimated) return; // 이미 애니메이션이 실행되었으면 중복 실행 방지
+    
+    if (footerTitle) {
+      footerTitle.classList.add('animate');
+    }
+    if (footerContactBtn) {
+      footerContactBtn.classList.add('animate');
+    }
+    
+    hasAnimated = true; // 애니메이션 실행 완료 표시
+  }
+  
+  // 스크롤 시 푸터 섹션 진입 감지
+  if (footerSection) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          animateFooter();
+        }
+      });
+    }, { threshold: 0.3 });
+    
+    observer.observe(footerSection);
+  }
+})();
+
+// 캐러셀 드래그 기능
+(function() {
+  const mediaScrollContainer = document.querySelector('.media-scroll-container');
+  const mediaGrid = document.querySelector('.media-grid');
+  
+  if (!mediaScrollContainer || !mediaGrid) return;
+  
+  let isDragging = false;
+  let startX = 0;
+  let scrollLeft = 0;
+  
+  // 마우스 이벤트
+  mediaScrollContainer.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    mediaScrollContainer.style.cursor = 'grabbing';
+    startX = e.pageX - mediaScrollContainer.offsetLeft;
+    scrollLeft = mediaScrollContainer.scrollLeft;
+  });
+  
+  mediaScrollContainer.addEventListener('mouseleave', () => {
+    isDragging = false;
+    mediaScrollContainer.style.cursor = 'grab';
+  });
+  
+  mediaScrollContainer.addEventListener('mouseup', () => {
+    isDragging = false;
+    mediaScrollContainer.style.cursor = 'grab';
+  });
+  
+  mediaScrollContainer.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.pageX - mediaScrollContainer.offsetLeft;
+    const walk = (x - startX) * 2; // 스크롤 속도 조절
+    mediaScrollContainer.scrollLeft = scrollLeft - walk;
+  });
+  
+  // 터치 이벤트 (모바일)
+  mediaScrollContainer.addEventListener('touchstart', (e) => {
+    isDragging = true;
+    startX = e.touches[0].pageX - mediaScrollContainer.offsetLeft;
+    scrollLeft = mediaScrollContainer.scrollLeft;
+  });
+  
+  mediaScrollContainer.addEventListener('touchend', () => {
+    isDragging = false;
+  });
+  
+  mediaScrollContainer.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    const x = e.touches[0].pageX - mediaScrollContainer.offsetLeft;
+    const walk = (x - startX) * 2;
+    mediaScrollContainer.scrollLeft = scrollLeft - walk;
+  });
+  
+  // 기본 커서 스타일 설정
+  mediaScrollContainer.style.cursor = 'grab';
+  
+  // 캐러셀 영역에서 커스텀 커서 적용
+  const customCursor = document.getElementById('custom-cursor');
+  
+  mediaScrollContainer.addEventListener('mouseenter', () => {
+    // 커서는 CSS에서 항상 표시되므로 display 제어 불필요
+    document.body.style.cursor = 'none';
+  });
+
+  mediaScrollContainer.addEventListener('mouseleave', () => {
+    // 커서는 CSS에서 항상 표시되므로 display 제어 불필요
+    document.body.style.cursor = 'url("./img/cursor.svg"), auto';
+  });
 })();

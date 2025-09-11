@@ -151,9 +151,9 @@
       <!-- 좌측 타이틀 -->
       <div class="business-text">
         <h3 class="business-subtitle">드론 · AI · 원격관제 클라우드를 통해 인프라의 생산성과 안전성을 동시에 높입니다.</h3>
-        <button class="business-more-btn">
-          <span class="business-more-text">사업분야 더보기</span>
-          <div class="business-more-arrow">
+        <button class="business-more-btn common-btn">
+          <span class="common-btn-text">사업분야 더보기</span>
+          <div class="common-btn-arrow">
             <img src="./img/arrow-right.svg" alt="arrow right" width="24" height="24">
           </div>
         </button>
@@ -246,19 +246,22 @@
       <div class="media-section">
         <div class="media-header">
           <h2 class="media-title">미디어센터</h2>
-          <button class="media-more-btn">더 많은 소식 보기 <span class="arrow">→</span></button>
+          <button class="media-more-btn common-btn-2">
+            <span class="common-btn-2-text">더 많은 소식 보기</span>
+            <div class="common-btn-2-arrow">
+              <img src="./img/arrow-right.svg" alt="arrow right" width="24" height="24">
+            </div>
+          </button>
         </div>
 
         <div class="media-scroll-container">
           <div class="media-grid">
             <div class="media-item">
               <div class="media-image">
-                <img src="./img/media-1.jpg" alt="AEC 및 측량" class="media-img">
-                <div class="media-overlay">
-                  <span class="media-category">AEC 및 측량</span>
-                </div>
+                <img src="./img/media-1.jpg" alt="AEC 및 측량" class="media-img" draggable="false">
               </div>
               <div class="media-content">
+                <span class="media-category">AEC 및 측량</span>
                 <h3 class="media-item-title">드론과 AI를 활용해 지속 가능한 방식으로 삼림 효율성 증대</h3>
                 <span class="media-date">2025.04.01</span>
               </div>
@@ -266,12 +269,10 @@
 
             <div class="media-item">
               <div class="media-image">
-                <img src="./img/media-2.jpg" alt="도시 계획" class="media-img">
-                <div class="media-overlay">
-                  <span class="media-category">도시 계획</span>
-                </div>
+                <img src="./img/media-2.jpg" alt="도시 계획" class="media-img" draggable="false">
               </div>
               <div class="media-content">
+                <span class="media-category">도시 계획</span>
                 <h3 class="media-item-title">송전선 500km를 밤새 훑다—AI 자율점검 드론 상시화</h3>
                 <span class="media-date">2025.04.01</span>
               </div>
@@ -279,12 +280,10 @@
 
             <div class="media-item">
               <div class="media-image">
-                <img src="./img/media-3.jpg" alt="공공 안전" class="media-img">
-                <div class="media-overlay">
-                  <span class="media-category">공공 안전</span>
-                </div>
+                <img src="./img/media-3.jpg" alt="공공 안전" class="media-img" draggable="false">
               </div>
               <div class="media-content">
+                <span class="media-category">공공 안전</span>
                 <h3 class="media-item-title">산불 초기 10분, 열화상 드론이 화선을 멈췄다</h3>
                 <span class="media-date">2025.04.01</span>
               </div>
@@ -292,12 +291,10 @@
 
             <div class="media-item">
               <div class="media-image">
-                <img src="./img/media-4.jpg" alt="도시 계획" class="media-img">
-                <div class="media-overlay">
-                  <span class="media-category">도시 계획</span>
-                </div>
+                <img src="./img/media-4.jpg" alt="도시 계획" class="media-img" draggable="false">
               </div>
               <div class="media-content">
+                <span class="media-category">도시 계획</span>
                 <h3 class="media-item-title">도심 30분 배송</h3>
                 <span class="media-date">2025.04.01</span>
               </div>
@@ -309,8 +306,13 @@
       <!-- 커리어 섹션 -->
       <div class="career-section">
         <div class="career-header">
-          <h2 class="career-title">에어로그리드와 함께 세상을 바꿀 인재를 기다립니다.</h2>
-          <button class="career-more-btn">더 많은 공고 보기 <span class="arrow">→</span></button>
+          <h2 class="career-title">에어로그리드와 함께<br>세상을 바꿀 인재를 기다립니다.</h2>
+          <button class="career-more-btn common-btn-2">
+            <span class="common-btn-2-text">더 많은 공고 보기</span>
+            <div class="common-btn-2-arrow">
+              <img src="./img/arrow-right.svg" alt="arrow right" width="24" height="24">
+            </div>
+          </button>
         </div>
 
         <div class="career-grid">
@@ -328,17 +330,6 @@
         </div>
 
         <!-- 페이지네이션 -->
-        <div class="pagination">
-          <button class="page-btn"><<</button>
-          <button class="page-btn"><</button>
-          <button class="page-btn active">1</button>
-          <button class="page-btn">2</button>
-          <button class="page-btn">3</button>
-          <button class="page-btn">4</button>
-          <button class="page-btn">5</button>
-          <button class="page-btn">></button>
-          <button class="page-btn">>></button>
-        </div>
       </div>
     </div>
   </section>
@@ -346,46 +337,34 @@
   <!-- Footer Section -->
   <footer class="footer-section">
     <div class="footer-container">
-      <div class="footer-content">
-        <div class="footer-logo">
-          <img src="./img/logo.svg" alt="Aerogrid Logo" class="footer-logo-img">
+      <div class="footer-center-content">
+        <div class="footer-text">
+          <h2 class="footer-title">
+            <div class="text-content">
+              <div class="title-line" data-line="1">
+                <span class="line-text">에어로그리드와 함께</span>
+              </div>
+              <div class="title-line" data-line="2">
+                <span class="line-text">모든 현장의 안전과 효율을 동시에</span>
+              </div>
+            </div>
+          </h2>
         </div>
-        <div class="footer-info">
-          <p class="footer-description">
-            드론 · AI · 원격관제 클라우드를 통해<br>
-            인프라의 생산성과 안전성을 동시에 높입니다.
-          </p>
-          <div class="footer-contact">
-            <p class="contact-item">서울특별시 강남구 테헤란로 123</p>
-            <p class="contact-item">T. 02-1234-5678</p>
-            <p class="contact-item">E. info@aerogrid.com</p>
+        <button class="footer-contact-btn common-btn">
+          <span class="common-btn-text">문의하기</span>
+          <div class="common-btn-arrow">
+            <img src="./img/arrow-right.svg" alt="arrow right" width="24" height="24">
           </div>
-        </div>
-        <div class="footer-links">
-          <div class="footer-link-group">
-            <h4 class="link-title">사업분야</h4>
-            <ul class="link-list">
-              <li><a href="#" class="footer-link">도시계획</a></li>
-              <li><a href="#" class="footer-link">인프라관리</a></li>
-              <li><a href="#" class="footer-link">환경모니터링</a></li>
-            </ul>
-          </div>
-          <div class="footer-link-group">
-            <h4 class="link-title">회사정보</h4>
-            <ul class="link-list">
-              <li><a href="#" class="footer-link">회사소개</a></li>
-              <li><a href="#" class="footer-link">채용정보</a></li>
-              <li><a href="#" class="footer-link">미디어센터</a></li>
-            </ul>
-          </div>
-        </div>
+        </button>
       </div>
-      <div class="footer-bottom">
-        <p class="copyright">© 2024 Aerogrid. All rights reserved.</p>
-        <div class="footer-legal">
-          <a href="#" class="legal-link">개인정보처리방침</a>
-          <a href="#" class="legal-link">이용약관</a>
-        </div>
+      <div class="footer-logo">
+        <img src="./img/logo.svg" alt="Aerogrid Logo" class="footer-logo-img">
+      </div>
+      <div class="footer-social-links">
+        <a href="#" class="social-link">Instagram</a>
+        <a href="#" class="social-link">Youtube</a>
+        <a href="#" class="social-link">Blog</a>
+        <a href="#" class="social-link">LinkedIn</a>
       </div>
     </div>
   </footer>
