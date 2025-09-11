@@ -17,6 +17,14 @@
   font-family: 'Fahkwang', serif;
 }
 
+@font-face{
+  font-family: 'Fahkwang';
+  src: url('/aerogrid/font/fahkwang/Fahkwang-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ========== CUSTOM CURSOR ========== */
 /* 데스크톱에서만 기본 커서를 숨기고 커스텀 커서를 보이게 */
 @media (hover: hover) and (pointer: fine) {
