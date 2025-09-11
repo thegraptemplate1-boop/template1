@@ -19,7 +19,7 @@
 
 @font-face{
   font-family: 'Fahkwang';
-  src: url('/aerogrid/font/fahkwang/Fahkwang-Bold.woff2') format('woff2');
+  src: url('/aerogrid/font/Fahkwang-Bold.woff') format('woff');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
