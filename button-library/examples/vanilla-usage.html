@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Component Library - Vanilla JS Usage</title>
+    
+    <!-- 폰트 로드 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.2/packages/wanted-sans/documentation/webfonts/wanted-sans.css">
+    
+    <!-- 버튼 라이브러리 스타일 -->
+    <link rel="stylesheet" href="../button-styles.css">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Wanted Sans', sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .demo-section {
+            background: white;
+            padding: 40px;
+            margin: 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .demo-section h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #0201AD;
+            padding-bottom: 10px;
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .button-row {
+            display: flex;
+            gap: 16px;
+            margin: 16px 0;
+            flex-wrap: wrap;
+        }
+        
+        .controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .controls label {
+            display: block;
+            margin: 8px 0;
+            font-weight: 500;
+        }
+        
+        .controls select, .controls input {
+            width: 100%;
+            padding: 8px;
+            margin: 4px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .controls button {
+            background: #0201AD;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 8px 8px 8px 0;
+        }
+        
+        .controls button:hover {
+            background: #0100a0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Button Component Library - Vanilla JS 사용법</h1>
+    
+    <!-- 기본 버튼들 -->
+    <div class="demo-section">
+        <h2>기본 버튼 타입</h2>
+        <div class="button-grid" id="basic-buttons"></div>
+    </div>
+    
+    <!-- 크기별 버튼들 -->
+    <div class="demo-section">
+        <h2>크기별 버튼</h2>
+        <div class="button-row" id="size-buttons"></div>
+    </div>
+    
+    <!-- 변형별 버튼들 -->
+    <div class="demo-section">
+        <h2>변형별 버튼</h2>
+        <div class="button-row" id="variant-buttons"></div>
+    </div>
+    
+    <!-- 사용 사례별 버튼들 -->
+    <div class="demo-section">
+        <h2>사용 사례별 버튼</h2>
+        <div class="button-row" id="usecase-buttons"></div>
+    </div>
+    
+    <!-- 동적 버튼 생성 -->
+    <div class="demo-section">
+        <h2>동적 버튼 생성</h2>
+        <div class="controls">
+            <label>버튼 타입:</label>
+            <select id="button-type">
+                <option value="primary">Primary</option>
+                <option value="secondary">Secondary</option>
+            </select>
+            
+            <label>버튼 크기:</label>
+            <select id="button-size">
+                <option value="small">Small</option>
+                <option value="medium">Medium</option>
+                <option value="large">Large</option>
+            </select>
+            
+            <label>버튼 텍스트:</label>
+            <input type="text" id="button-text" value="동적 버튼" placeholder="버튼 텍스트 입력">
+            
+            <label>아이콘 위치:</label>
+            <select id="icon-position">
+                <option value="right">Right</option>
+                <option value="left">Left</option>
+            </select>
+            
+            <button onclick="createDynamicButton()">버튼 생성</button>
+            <button onclick="clearDynamicButtons()">모든 버튼 제거</button>
+        </div>
+        <div id="dynamic-buttons"></div>
+    </div>
+    
+    <!-- 버튼 그룹 -->
+    <div class="demo-section">
+        <h2>버튼 그룹</h2>
+        <div class="button-row" id="button-groups"></div>
+    </div>
+
+    <!-- 버튼 라이브러리 스크립트 -->
+    <script src="../button-config.js"></script>
+    <script src="../button-component.js"></script>
+    
+    <script>
+        // 기본 버튼들 생성
+        function createBasicButtons() {
+            const container = document.getElementById('basic-buttons');
+            
+            const buttons = [
+                ButtonFactory.createPrimary({ text: 'Primary Button' }),
+                ButtonFactory.createSecondary({ text: 'Secondary Button' })
+            ];
+            
+            buttons.forEach(button => {
+                container.appendChild(button.getElement());
+            });
+        }
+        
+        // 크기별 버튼들 생성
+        function createSizeButtons() {
+            const container = document.getElementById('size-buttons');
+            
+            const sizes = ['small', 'medium', 'large'];
+            sizes.forEach(size => {
+                const button = new ButtonComponent({
+                    type: 'primary',
+                    size: size,
+                    text: `${size.charAt(0).toUpperCase() + size.slice(1)} Button`
+                });
+                container.appendChild(button.getElement());
+            });
+        }
+        
+        // 변형별 버튼들 생성
+        function createVariantButtons() {
+            const container = document.getElementById('variant-buttons');
+            
+            const variants = ['default', 'outline', 'ghost'];
+            variants.forEach(variant => {
+                const button = new ButtonComponent({
+                    type: 'primary',
+                    variant: variant,
+                    text: `${variant.charAt(0).toUpperCase() + variant.slice(1)} Button`
+                });
+                container.appendChild(button.getElement());
+            });
+        }
+        
+        // 사용 사례별 버튼들 생성
+        function createUseCaseButtons() {
+            const container = document.getElementById('usecase-buttons');
+            
+            const useCases = ['businessMore', 'mediaMore', 'careerMore', 'footerContact'];
+            useCases.forEach(useCase => {
+                const config = ButtonConfig.fromUseCase(useCase);
+                const button = new ButtonComponent(config);
+                container.appendChild(button.getElement());
+            });
+        }
+        
+        // 동적 버튼 생성
+        function createDynamicButton() {
+            const container = document.getElementById('dynamic-buttons');
+            
+            const type = document.getElementById('button-type').value;
+            const size = document.getElementById('button-size').value;
+            const text = document.getElementById('button-text').value;
+            const iconPosition = document.getElementById('icon-position').value;
+            
+            const button = new ButtonComponent({
+                type: type,
+                size: size,
+                text: text,
+                iconPosition: iconPosition,
+                onClick: (e) => {
+                    alert(`클릭된 버튼: ${text}`);
+                }
+            });
+            
+            container.appendChild(button.getElement());
+        }
+        
+        // 동적 버튼들 제거
+        function clearDynamicButtons() {
+            const container = document.getElementById('dynamic-buttons');
+            container.innerHTML = '';
+        }
+        
+        // 버튼 그룹 생성
+        function createButtonGroups() {
+            const container = document.getElementById('button-groups');
+            
+            // 수평 그룹
+            const horizontalGroup = document.createElement('div');
+            horizontalGroup.style.display = 'flex';
+            horizontalGroup.style.gap = '16px';
+            horizontalGroup.style.marginBottom = '20px';
+            
+            const btn1 = new ButtonComponent({ type: 'primary', text: '저장' });
+            const btn2 = new ButtonComponent({ type: 'secondary', text: '취소' });
+            
+            horizontalGroup.appendChild(btn1.getElement());
+            horizontalGroup.appendChild(btn2.getElement());
+            
+            // 수직 그룹
+            const verticalGroup = document.createElement('div');
+            verticalGroup.style.display = 'flex';
+            verticalGroup.style.flexDirection = 'column';
+            verticalGroup.style.gap = '12px';
+            verticalGroup.style.width = '200px';
+            
+            const btn3 = new ButtonComponent({ type: 'primary', text: '상단 버튼' });
+            const btn4 = new ButtonComponent({ type: 'secondary', text: '하단 버튼' });
+            
+            verticalGroup.appendChild(btn3.getElement());
+            verticalGroup.appendChild(btn4.getElement());
+            
+            container.appendChild(horizontalGroup);
+            container.appendChild(verticalGroup);
+        }
+        
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            createBasicButtons();
+            createSizeButtons();
+            createVariantButtons();
+            createUseCaseButtons();
+            createButtonGroups();
+            
+            console.log('Button Component Library initialized');
+        });
+        
+        // 전역 함수로 등록
+        window.createDynamicButton = createDynamicButton;
+        window.clearDynamicButtons = clearDynamicButtons;
+    </script>
+</body>
+</html>
+
+

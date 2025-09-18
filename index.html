@@ -17,6 +17,7 @@
       <img src="./img/hero_Image-2.jpg" alt="AEROGRID Hero Background 2" class="hero-bg-image">
       <img src="./img/hero_Image-3.jpg" alt="AEROGRID Hero Background 3" class="hero-bg-image">
       <img src="./img/hero_Image-4.jpg" alt="AEROGRID Hero Background 4" class="hero-bg-image">
+      <img src="./img/hero_Image-5.jpg" alt="AEROGRID Hero Background 5" class="hero-bg-image">
       <div class="hero-overlay"></div>
     </div>
     
@@ -24,14 +25,17 @@
     <header class="header">
       <div class="header-content">
         <div class="logo">
-          <img src="./img/logo.svg" alt="AEROGRID Logo" class="logo-img">
+          <a href="index.html">
+            <img src="./img/logo.svg" alt="AEROGRID Logo" class="logo-img">
+          </a>
         </div>
         <nav class="nav">
-          <a href="#" class="nav-link">회사소개</a>
-          <a href="#" class="nav-link">사업영역</a>
-          <a href="#" class="nav-link">미디어센터</a>
-          <a href="#" class="nav-link">채용</a>
-          <a href="#" class="nav-link">문의하기</a>
+          <a href="company.html" class="nav-link">회사소개</a>
+          <a href="business.html" class="nav-link">사업영역</a>
+          <a href="media.html" class="nav-link">미디어센터</a>
+          <a href="career.html" class="nav-link">채용</a>
+          <a href="contact.html" class="nav-link">문의하기</a>
+          <a href="admin/admin.html" class="nav-link admin-link">관리자</a>
           <div class="nav-divider"></div>
           <div class="language-selector">
             <span class="language-text">KR</span>
@@ -79,6 +83,11 @@
             <circle class="progress-ring-circle" cx="14" cy="14" r="12" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.7"/>
           </svg>
         </span>
+        <span class="dot" data-slide="4">
+          <svg class="progress-ring" width="28" height="28">
+            <circle class="progress-ring-circle" cx="14" cy="14" r="12" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.7"/>
+          </svg>
+        </span>
       </div>
     </div>
   </section>
@@ -96,7 +105,7 @@
   </svg>
 
   <!-- Vision Section -->
-  <section class="vision-section"> <!-- LIFE SPACE 섹션 -->
+  <section class="vision-section"> 
     <div class="vision-container"> <!-- sticky stage -->
       <!-- 헤드라인 -->
       <div class="vision-text">
@@ -150,14 +159,16 @@
 
       <!-- 좌측 타이틀 -->
       <div class="business-text">
-        <h3 class="business-subtitle">드론 · AI · 원격관제 클라우드를 통해 인프라의 생산성과 안전성을 동시에 높입니다.</h3>
-        <button class="business-more-btn common-btn">
-          <span class="common-btn-text">사업분야 더보기</span>
-          <div class="common-btn-arrow">
-            <img src="./img/arrow-right.svg" alt="arrow right" width="24" height="24">
-          </div>
-        </button>
+        <h3 class="business-subtitle">드론 · AI · 원격관제 클라우드를 통해<br>인프라의 생산성과 안전성을 동시에 높입니다.</h3>
       </div>
+
+      <!-- 사업분야 더보기 버튼 -->
+      <a href="business.html" class="business-more-btn common-btn">
+        <span class="common-btn-text">사업분야 더보기</span>
+        <div class="common-btn-arrow">
+          <img src="./img/arrow-right.svg" alt="arrow right" width="24" height="24">
+        </div>
+      </a>
 
       <!-- 비즈니스 카드들 -->
       <div class="business-cards">
@@ -246,12 +257,12 @@
       <div class="media-section">
         <div class="media-header">
           <h2 class="media-title">미디어센터</h2>
-          <button class="media-more-btn common-btn-2">
+          <a href="media.html" class="media-more-btn common-btn-2">
             <span class="common-btn-2-text">더 많은 소식 보기</span>
             <div class="common-btn-2-arrow">
               <img src="./img/arrow-right.svg" alt="arrow right" width="24" height="24">
             </div>
-          </button>
+          </a>
         </div>
 
         <div class="media-scroll-container">
@@ -307,12 +318,12 @@
       <div class="career-section">
         <div class="career-header">
           <h2 class="career-title">에어로그리드와 함께<br>세상을 바꿀 인재를 기다립니다.</h2>
-          <button class="career-more-btn common-btn-2">
+          <a href="career.html" class="career-more-btn common-btn-2">
             <span class="common-btn-2-text">더 많은 공고 보기</span>
             <div class="common-btn-2-arrow">
               <img src="./img/arrow-right.svg" alt="arrow right" width="24" height="24">
             </div>
-          </button>
+          </a>
         </div>
 
         <div class="career-grid">
@@ -350,12 +361,12 @@
             </div>
           </h2>
         </div>
-        <button class="footer-contact-btn common-btn">
+        <a href="contact.html" class="footer-contact-btn common-btn">
           <span class="common-btn-text">문의하기</span>
           <div class="common-btn-arrow">
             <img src="./img/arrow-right.svg" alt="arrow right" width="24" height="24">
           </div>
-        </button>
+        </a>
       </div>
       <div class="footer-logo">
         <img src="./img/logo.svg" alt="Aerogrid Logo" class="footer-logo-img">

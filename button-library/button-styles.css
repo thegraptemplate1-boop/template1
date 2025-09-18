@@ -1,0 +1,317 @@
+/**
+ * AeroGrid Button Component Library - Styles
+ * 공통버튼 컴포넌트 전용 스타일시트
+ */
+
+/* ========== BUTTON BASE STYLES ========== */
+.aerogrid-btn {
+  font-size: clamp(16px, 1.8vw, 20px);
+  font-weight: 500;
+  background: transparent;
+  border: 1px solid;
+  padding: 12px 12px 12px 48px;
+  border-radius: 40px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Wanted Sans', sans-serif;
+  text-decoration: none;
+  outline: none;
+}
+
+.aerogrid-btn:focus {
+  outline: 2px solid rgba(2, 1, 173, 0.5);
+  outline-offset: 2px;
+}
+
+/* ========== BUTTON TYPES ========== */
+
+/* Primary Button (기존 common-btn) */
+.aerogrid-btn--primary {
+  color: white;
+  border-color: #fff;
+}
+
+.aerogrid-btn--primary:hover {
+  background: rgba(255, 255, 255, 1);
+}
+
+.aerogrid-btn--primary .aerogrid-btn__text {
+  color: #fff;
+  transition: color 0.3s ease-out;
+}
+
+.aerogrid-btn--primary:hover .aerogrid-btn__text {
+  color: rgb(2, 1, 173);
+}
+
+.aerogrid-btn--primary .aerogrid-btn__icon {
+  background: rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease-out;
+}
+
+.aerogrid-btn--primary:hover .aerogrid-btn__icon {
+  background: rgb(2, 1, 173);
+}
+
+.aerogrid-btn--primary .aerogrid-btn__icon img {
+  filter: brightness(0) invert(1);
+}
+
+/* Secondary Button (기존 common-btn-2) */
+.aerogrid-btn--secondary {
+  color: #191919;
+  border-color: #d9d9d9;
+}
+
+.aerogrid-btn--secondary:hover {
+  background: transparent;
+  border-color: #0201AD;
+}
+
+.aerogrid-btn--secondary .aerogrid-btn__text {
+  color: #191919;
+  transition: color 0.3s ease;
+}
+
+.aerogrid-btn--secondary:hover .aerogrid-btn__text {
+  color: #0201AD;
+}
+
+.aerogrid-btn--secondary .aerogrid-btn__icon {
+  background: rgba(25, 25, 25, 0.05);
+  transition: all 0.3s ease;
+}
+
+.aerogrid-btn--secondary:hover .aerogrid-btn__icon {
+  background: #0201AD;
+}
+
+.aerogrid-btn--secondary .aerogrid-btn__icon img {
+  color: #191919;
+}
+
+.aerogrid-btn--secondary:hover .aerogrid-btn__icon img {
+  color: #FFFFFF !important;
+}
+
+/* ========== BUTTON VARIANTS ========== */
+
+/* Outline Variant */
+.aerogrid-btn--outline {
+  background: transparent;
+}
+
+/* Ghost Variant */
+.aerogrid-btn--ghost {
+  background: transparent;
+  border: none;
+}
+
+/* ========== BUTTON SIZES ========== */
+
+.aerogrid-btn--small {
+  font-size: clamp(14px, 1.5vw, 16px);
+  padding: 8px 8px 8px 36px;
+  gap: 12px;
+}
+
+.aerogrid-btn--small .aerogrid-btn__icon {
+  width: 36px;
+  height: 36px;
+}
+
+.aerogrid-btn--small .aerogrid-btn__icon img {
+  width: 16px;
+  height: 16px;
+}
+
+.aerogrid-btn--medium {
+  font-size: clamp(16px, 1.8vw, 20px);
+  padding: 12px 12px 12px 48px;
+  gap: 16px;
+}
+
+.aerogrid-btn--medium .aerogrid-btn__icon {
+  width: 48px;
+  height: 48px;
+}
+
+.aerogrid-btn--medium .aerogrid-btn__icon img {
+  width: 20px;
+  height: 20px;
+}
+
+.aerogrid-btn--large {
+  font-size: clamp(18px, 2vw, 24px);
+  padding: 16px 16px 16px 56px;
+  gap: 20px;
+}
+
+.aerogrid-btn--large .aerogrid-btn__icon {
+  width: 56px;
+  height: 56px;
+}
+
+.aerogrid-btn--large .aerogrid-btn__icon img {
+  width: 24px;
+  height: 24px;
+}
+
+/* ========== BUTTON TEXT ========== */
+.aerogrid-btn__text {
+  font-size: inherit;
+  font-weight: inherit;
+  transition: color 0.3s ease;
+  white-space: nowrap;
+}
+
+/* ========== BUTTON ICON ========== */
+.aerogrid-btn__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease-out;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.aerogrid-btn__icon img {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease-out;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+/* Icon Animation - 기존 애니메이션 로직 */
+.aerogrid-btn__icon::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) translateX(-200%);
+  width: 20px;
+  height: 20px;
+  background-color: #FFFFFF;
+  mask: url("./img/arrow-right.svg") no-repeat center;
+  mask-size: contain;
+  transition: transform 0.3s ease-out;
+  z-index: 1;
+}
+
+/* Hover Animation */
+.aerogrid-btn--hover .aerogrid-btn__icon img {
+  transform: translate(-50%, -50%) translateX(200%);
+}
+
+.aerogrid-btn--hover .aerogrid-btn__icon::before {
+  transform: translate(-50%, -50%);
+}
+
+/* ========== BUTTON STATES ========== */
+
+/* Disabled State */
+.aerogrid-btn--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Loading State */
+.aerogrid-btn--loading {
+  pointer-events: none;
+}
+
+.aerogrid-btn--loading .aerogrid-btn__icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ========== RESPONSIVE STYLES ========== */
+@media (max-width: 768px) {
+  .aerogrid-btn {
+    font-size: clamp(14px, 3vw, 18px);
+    padding: 14px 20px;
+    gap: 24px;
+  }
+  
+  .aerogrid-btn__icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .aerogrid-btn__icon img {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .aerogrid-btn {
+    font-size: clamp(12px, 4vw, 16px);
+    padding: 12px 16px;
+    gap: 20px;
+  }
+  
+  .aerogrid-btn__icon {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .aerogrid-btn__icon img {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* ========== ACCESSIBILITY ========== */
+@media (prefers-reduced-motion: reduce) {
+  .aerogrid-btn {
+    transition: none;
+  }
+  
+  .aerogrid-btn__icon {
+    transition: none;
+  }
+  
+  .aerogrid-btn__icon img {
+    transition: none;
+  }
+  
+  .aerogrid-btn__icon::before {
+    transition: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .aerogrid-btn {
+    border-width: 2px;
+  }
+  
+  .aerogrid-btn--primary {
+    border-color: #fff;
+  }
+  
+  .aerogrid-btn--secondary {
+    border-color: #000;
+  }
+}
+
+

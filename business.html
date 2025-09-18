@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>사업영역 - AEROGRID</title>
+  <link rel="stylesheet" href="./styles.css"/>
+  <link rel="stylesheet" href="./font/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.2/packages/wanted-sans/documentation/webfonts/wanted-sans.css">
+  <style>
+    /* 사업영역 페이지 전용 스타일 - 기존 스타일과 충돌 방지 */
+    .business-page-hero {
+      height: 42vh;
+      background: linear-gradient(135deg, #0201AD 0%, #0087AD 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .business-page-hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('https://images.unsplash.com/photo-1473968512647-3e447244af8f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80') center/cover;
+      opacity: 0.3;
+      z-index: 1;
+    }
+
+    .business-page-hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 800px;
+      padding: 0 20px;
+    }
+
+    .business-page-hero h1 {
+      font-size: clamp(48px, 8vw, 80px);
+      font-weight: 700;
+      margin-bottom: 24px;
+      line-height: 1.2;
+    }
+
+    .business-page-hero p {
+      font-size: clamp(18px, 3vw, 24px);
+      opacity: 0.9;
+      line-height: 1.6;
+    }
+
+    .business-page-overview {
+      padding: 120px 0;
+      background: #fff;
+    }
+
+    .business-page-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .section-title {
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 700;
+      color: #191919;
+      text-align: center;
+      margin-bottom: 80px;
+      line-height: 1.2;
+    }
+
+    .business-page-overview-text {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto 80px;
+    }
+
+    .business-page-overview-text p {
+      font-size: clamp(16px, 2.5vw, 20px);
+      line-height: 1.6;
+      color: #666;
+    }
+
+    .business-page-areas {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 40px;
+      margin-bottom: 120px;
+    }
+
+    .business-page-area-card {
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+
+    .business-page-area-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .business-page-area-image {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+    }
+
+    .business-page-area-content {
+      padding: 40px 30px;
+    }
+
+    .business-page-area-title {
+      font-size: clamp(20px, 3vw, 24px);
+      font-weight: 600;
+      color: #191919;
+      margin-bottom: 16px;
+    }
+
+    .business-page-area-description {
+      font-size: clamp(14px, 2vw, 16px);
+      line-height: 1.6;
+      color: #666;
+      margin-bottom: 24px;
+    }
+
+    .business-page-area-features {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .business-page-area-features li {
+      font-size: clamp(12px, 1.8vw, 14px);
+      color: #0201AD;
+      margin-bottom: 8px;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .business-page-area-features li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: #0201AD;
+      font-weight: bold;
+    }
+
+    .business-page-area-arrow {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .business-page-area-arrow img {
+      width: 24px;
+      height: 24px;
+      transition: transform 0.3s ease;
+    }
+
+    .business-page-area-card:hover .business-page-area-arrow img {
+      transform: translateX(8px);
+    }
+
+    .technology-section {
+      background: #f8f9fa;
+      padding: 120px 0;
+    }
+
+    .technology-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 40px;
+    }
+
+    .technology-item {
+      background: white;
+      border-radius: 16px;
+      padding: 40px 30px;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .technology-item:hover {
+      transform: translateY(-8px);
+    }
+
+    .technology-icon {
+      width: 80px;
+      height: 80px;
+      background: #0201AD;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      color: white;
+      font-size: 32px;
+    }
+
+    .technology-item h4 {
+      font-size: clamp(18px, 2.5vw, 20px);
+      font-weight: 600;
+      color: #191919;
+      margin-bottom: 16px;
+    }
+
+    .technology-item p {
+      font-size: clamp(14px, 2vw, 16px);
+      line-height: 1.6;
+      color: #666;
+    }
+
+    .case-studies {
+      padding: 120px 0;
+      background: #fff;
+    }
+
+    .case-studies-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 40px;
+    }
+
+    .case-study-card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .case-study-card:hover {
+      transform: translateY(-8px);
+    }
+
+    .case-study-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .case-study-content {
+      padding: 30px;
+    }
+
+    .case-study-category {
+      font-size: clamp(12px, 1.8vw, 14px);
+      color: #0201AD;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .case-study-title {
+      font-size: clamp(16px, 2.5vw, 18px);
+      font-weight: 600;
+      color: #191919;
+      margin-bottom: 12px;
+    }
+
+    .case-study-description {
+      font-size: clamp(14px, 2vw, 16px);
+      line-height: 1.6;
+      color: #666;
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .business-page-areas {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+
+      .technology-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+
+      .case-studies-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+
+      .business-page-overview,
+      .technology-section,
+      .case-studies {
+        padding: 80px 0;
+      }
+
+      .business-page-area-content {
+        padding: 30px 20px;
+      }
+
+      .technology-item {
+        padding: 30px 20px;
+      }
+
+      .case-study-content {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header Navigation -->
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">
+        <a href="index.html">
+          <img src="./img/logo.svg" alt="AEROGRID Logo" class="logo-img">
+        </a>
+      </div>
+      <nav class="nav">
+        <a href="company.html" class="nav-link">회사소개</a>
+        <a href="business.html" class="nav-link active">사업영역</a>
+        <a href="media.html" class="nav-link">미디어센터</a>
+        <a href="career.html" class="nav-link">채용</a>
+        <a href="contact.html" class="nav-link">문의하기</a>
+        <div class="nav-divider"></div>
+        <div class="language-selector">
+          <span class="language-text">KR</span>
+          <img src="./img/arrow_down.svg" alt="Arrow Down" class="language-arrow">
+        </div>
+        <div class="menu-icon">
+          <img src="./img/menu.svg" alt="Menu" class="menu-img">
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Business Hero Section -->
+  <section class="business-page-hero">
+    <div class="business-page-hero-content">
+      <h1>사업영역</h1>
+      <p>드론 · AI · 원격관제 클라우드를 통해 인프라의 생산성과 안전성을 동시에 높입니다</p>
+    </div>
+  </section>
+
+  <!-- Business Overview Section -->
+  <section class="business-page-overview">
+    <div class="business-page-container">
+      <h2 class="section-title">사업 분야</h2>
+      <div class="business-page-overview-text">
+        <p>에어로그리드는 다양한 산업 분야에서 드론 기술과 AI를 활용한 혁신적인 솔루션을 제공합니다. 각 분야별로 특화된 기술과 서비스를 통해 고객의 비즈니스 가치를 극대화합니다.</p>
+      </div>
+
+      <div class="business-page-areas">
+        <!-- 도시 계획 -->
+        <div class="business-page-area-card" data-category="urban-planning">
+          <img src="./img/business_area-1.jpg" alt="도시 계획" class="business-page-area-image">
+          <div class="business-page-area-content">
+            <h3 class="business-page-area-title">도시 계획</h3>
+            <p class="business-page-area-description">매핑, 모델링, 워크플로 자동화로 보다 효율적으로 설계하고 계획합니다.</p>
+            <ul class="business-page-area-features">
+              <li>3D 도시 모델링</li>
+              <li>토지 이용 계획</li>
+              <li>교통 흐름 분석</li>
+              <li>인프라 설계 지원</li>
+            </ul>
+            <div class="business-page-area-arrow">
+              <img src="./img/arrow-right.svg" alt="arrow right">
+            </div>
+          </div>
+        </div>
+
+        <!-- 공공 안전 -->
+        <div class="business-page-area-card" data-category="public-safety">
+          <img src="./img/business_area-2.jpg" alt="공공 안전" class="business-page-area-image">
+          <div class="business-page-area-content">
+            <h3 class="business-page-area-title">공공 안전</h3>
+            <p class="business-page-area-description">실시간 모니터링과 AI 분석으로 위험 상황을 사전에 감지하고 대응합니다.</p>
+            <ul class="business-page-area-features">
+              <li>재난 감시 및 대응</li>
+              <li>화재 조기 감지</li>
+              <li>교통 안전 모니터링</li>
+              <li>응급상황 대응</li>
+            </ul>
+            <div class="business-page-area-arrow">
+              <img src="./img/arrow-right.svg" alt="arrow right">
+            </div>
+          </div>
+        </div>
+
+        <!-- AEC 및 측량 -->
+        <div class="business-page-area-card" data-category="aec-survey">
+          <img src="./img/business_area-3.jpg" alt="AEC 및 측량" class="business-page-area-image">
+          <div class="business-page-area-content">
+            <h3 class="business-page-area-title">AEC 및 측량</h3>
+            <p class="business-page-area-description">정밀한 3D 모델링과 측량 데이터로 건설 프로젝트의 정확성을 높입니다.</p>
+            <ul class="business-page-area-features">
+              <li>정밀 측량 및 매핑</li>
+              <li>건설 현장 모니터링</li>
+              <li>진행률 추적</li>
+              <li>품질 관리</li>
+            </ul>
+            <div class="business-page-area-arrow">
+              <img src="./img/arrow-right.svg" alt="arrow right">
+            </div>
+          </div>
+        </div>
+
+        <!-- 환경·해양 보전 -->
+        <div class="business-page-area-card" data-category="environment">
+          <img src="./img/business_area-4.jpg" alt="환경·해양 보전" class="business-page-area-image">
+          <div class="business-page-area-content">
+            <h3 class="business-page-area-title">환경·해양 보전</h3>
+            <p class="business-page-area-description">환경 변화를 모니터링하고 지속 가능한 보전 정책을 수립합니다.</p>
+            <ul class="business-page-area-features">
+              <li>환경 모니터링</li>
+              <li>해양 생태 조사</li>
+              <li>기후 변화 추적</li>
+              <li>자연 보전 관리</li>
+            </ul>
+            <div class="business-page-area-arrow">
+              <img src="./img/arrow-right.svg" alt="arrow right">
+            </div>
+          </div>
+        </div>
+
+        <!-- 농업·스마트팜 -->
+        <div class="business-page-area-card" data-category="agriculture">
+          <img src="./img/business_area-5.jpg" alt="농업·스마트팜" class="business-page-area-image">
+          <div class="business-page-area-content">
+            <h3 class="business-page-area-title">농업·스마트팜</h3>
+            <p class="business-page-area-description">스마트 농업 기술로 작물 생산성과 품질을 향상시킵니다.</p>
+            <ul class="business-page-area-features">
+              <li>작물 상태 모니터링</li>
+              <li>정밀 농업</li>
+              <li>수확량 예측</li>
+              <li>병해충 감지</li>
+            </ul>
+            <div class="business-page-area-arrow">
+              <img src="./img/arrow-right.svg" alt="arrow right">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Technology Section -->
+  <section class="technology-section">
+    <div class="business-page-container">
+      <h2 class="section-title">핵심 기술</h2>
+      <div class="technology-grid">
+        <div class="technology-item">
+          <div class="technology-icon">🚁</div>
+          <h4>자율비행 드론</h4>
+          <p>AI 기반 자율비행 시스템으로 정밀한 경로 계획과 안전한 운항을 보장합니다.</p>
+        </div>
+        <div class="technology-item">
+          <div class="technology-icon">🤖</div>
+          <h4>AI 비전 분석</h4>
+          <p>실시간 이미지 분석과 머신러닝을 통한 지능형 데이터 처리 시스템입니다.</p>
+        </div>
+        <div class="technology-item">
+          <div class="technology-icon">☁️</div>
+          <h4>클라우드 플랫폼</h4>
+          <p>확장 가능한 클라우드 인프라로 대용량 데이터 처리와 실시간 모니터링을 제공합니다.</p>
+        </div>
+        <div class="technology-item">
+          <div class="technology-icon">📊</div>
+          <h4>데이터 분석</h4>
+          <p>빅데이터 분석과 시각화를 통해 인사이트를 제공하고 의사결정을 지원합니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Case Studies Section -->
+  <section class="case-studies">
+    <div class="business-page-container">
+      <h2 class="section-title">성공 사례</h2>
+      <div class="case-studies-grid">
+        <div class="case-study-card">
+          <img src="./img/media-1.jpg" alt="AEC 및 측량 사례" class="case-study-image">
+          <div class="case-study-content">
+            <div class="case-study-category">AEC 및 측량</div>
+            <h4 class="case-study-title">대규모 건설 프로젝트 측량</h4>
+            <p class="case-study-description">드론과 AI를 활용해 지속 가능한 방식으로 삼림 효율성을 증대시킨 프로젝트입니다.</p>
+          </div>
+        </div>
+        <div class="case-study-card">
+          <img src="./img/media-2.jpg" alt="도시 계획 사례" class="case-study-image">
+          <div class="case-study-content">
+            <div class="case-study-category">도시 계획</div>
+            <h4 class="case-study-title">송전선 자동 점검 시스템</h4>
+            <p class="case-study-description">송전선 500km를 밤새 훑는 AI 자율점검 드론 상시화 프로젝트입니다.</p>
+          </div>
+        </div>
+        <div class="case-study-card">
+          <img src="./img/media-3.jpg" alt="공공 안전 사례" class="case-study-image">
+          <div class="case-study-content">
+            <div class="case-study-category">공공 안전</div>
+            <h4 class="case-study-title">산불 초기 대응 시스템</h4>
+            <p class="case-study-description">산불 초기 10분, 열화상 드론이 화선을 멈춘 혁신적인 안전 시스템입니다.</p>
+          </div>
+        </div>
+        <div class="case-study-card">
+          <img src="./img/media-4.jpg" alt="물류 사례" class="case-study-image">
+          <div class="case-study-content">
+            <div class="case-study-category">물류</div>
+            <h4 class="case-study-title">도심 30분 배송 서비스</h4>
+            <p class="case-study-description">드론을 활용한 혁신적인 도심 배송 서비스로 물류 효율성을 극대화했습니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer Section -->
+  <footer class="footer-section">
+    <div class="footer-container">
+      <div class="footer-center-content">
+        <div class="footer-text">
+          <h2 class="footer-title">
+            <div class="text-content">
+              <div class="title-line" data-line="1">
+                <span class="line-text">에어로그리드와 함께</span>
+              </div>
+              <div class="title-line" data-line="2">
+                <span class="line-text">모든 현장의 안전과 효율을 동시에</span>
+              </div>
+            </div>
+          </h2>
+        </div>
+        <button class="footer-contact-btn common-btn">
+          <span class="common-btn-text">문의하기</span>
+          <div class="common-btn-arrow">
+            <img src="./img/arrow-right.svg" alt="arrow right" width="24" height="24">
+          </div>
+        </button>
+      </div>
+      <div class="footer-logo">
+        <img src="./img/logo.svg" alt="Aerogrid Logo" class="footer-logo-img">
+      </div>
+      <div class="footer-social-links">
+        <a href="#" class="social-link">Instagram</a>
+        <a href="#" class="social-link">Youtube</a>
+        <a href="#" class="social-link">Blog</a>
+        <a href="#" class="social-link">LinkedIn</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Custom Cursor -->
+  <div id="custom-cursor" aria-hidden="true"></div>
+
+  <script src="./script.js"></script>
+  <script>
+    // 사업영역 카드 클릭 이벤트
+    document.addEventListener('DOMContentLoaded', function() {
+      const businessCards = document.querySelectorAll('.business-page-area-card');
+      
+      businessCards.forEach(card => {
+        card.addEventListener('click', function() {
+          const category = this.getAttribute('data-category');
+          // 카테고리별 상세 페이지로 이동하거나 모달 표시
+          console.log('선택된 사업영역:', category);
+          // 여기에 상세 페이지 이동 로직 추가
+        });
+      });
+    });
+  </script>
+</body>
+</html>

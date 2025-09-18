@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>회사소개 - AEROGRID</title>
+  <link rel="stylesheet" href="./styles.css"/>
+  <link rel="stylesheet" href="./font/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.2/packages/wanted-sans/documentation/webfonts/wanted-sans.css">
+  <style>
+    /* 회사소개 페이지 전용 스타일 */
+    .company-hero {
+      height: 42vh;
+      background: linear-gradient(135deg, #0201AD 0%, #0087AD 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .company-hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1926&q=80') center/cover;
+      opacity: 0.3;
+      z-index: 1;
+    }
+
+    .company-hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 800px;
+      padding: 0 20px;
+    }
+
+    .company-hero h1 {
+      font-size: clamp(48px, 8vw, 80px);
+      font-weight: 700;
+      margin-bottom: 24px;
+      line-height: 1.2;
+    }
+
+    .company-hero p {
+      font-size: clamp(18px, 3vw, 24px);
+      opacity: 0.9;
+      line-height: 1.6;
+    }
+
+    .company-section {
+      padding: 120px 0;
+      background: #fff;
+    }
+
+    .company-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .section-title {
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 700;
+      color: #191919;
+      text-align: center;
+      margin-bottom: 80px;
+      line-height: 1.2;
+    }
+
+    .vision-mission {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      margin-bottom: 120px;
+    }
+
+    .vision-mission-item {
+      text-align: center;
+    }
+
+    .vision-mission-item h3 {
+      font-size: clamp(24px, 4vw, 32px);
+      font-weight: 600;
+      color: #0201AD;
+      margin-bottom: 24px;
+    }
+
+    .vision-mission-item p {
+      font-size: clamp(16px, 2.5vw, 18px);
+      line-height: 1.6;
+      color: #666;
+    }
+
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 40px;
+      margin-bottom: 120px;
+    }
+
+    .value-item {
+      text-align: center;
+      padding: 40px 20px;
+      background: #f8f9fa;
+      border-radius: 16px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .value-item:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .value-item h4 {
+      font-size: clamp(20px, 3vw, 24px);
+      font-weight: 600;
+      color: #191919;
+      margin-bottom: 16px;
+    }
+
+    .value-item p {
+      font-size: clamp(14px, 2vw, 16px);
+      line-height: 1.6;
+      color: #666;
+    }
+
+    .team-section {
+      background: #f8f9fa;
+      padding: 120px 0;
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 40px;
+    }
+
+    .team-member {
+      background: white;
+      border-radius: 16px;
+      padding: 40px 20px;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .team-member:hover {
+      transform: translateY(-8px);
+    }
+
+    .team-member img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 24px;
+      border: 4px solid #0201AD;
+    }
+
+    .team-member h4 {
+      font-size: clamp(18px, 2.5vw, 20px);
+      font-weight: 600;
+      color: #191919;
+      margin-bottom: 8px;
+    }
+
+    .team-member p {
+      font-size: clamp(14px, 2vw, 16px);
+      color: #666;
+      margin-bottom: 16px;
+    }
+
+    .team-member .role {
+      font-size: clamp(12px, 1.5vw, 14px);
+      color: #0201AD;
+      font-weight: 500;
+    }
+
+    .history-section {
+      padding: 120px 0;
+    }
+
+    .history-timeline {
+      position: relative;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .history-timeline::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: #0201AD;
+      transform: translateX(-50%);
+    }
+
+    .history-item {
+      position: relative;
+      margin-bottom: 60px;
+      display: flex;
+      align-items: center;
+    }
+
+    .history-item:nth-child(odd) {
+      flex-direction: row;
+    }
+
+    .history-item:nth-child(even) {
+      flex-direction: row-reverse;
+    }
+
+    .history-content {
+      flex: 1;
+      padding: 0 40px;
+    }
+
+    .history-year {
+      font-size: clamp(18px, 3vw, 24px);
+      font-weight: 700;
+      color: #0201AD;
+      margin-bottom: 8px;
+    }
+
+    .history-title {
+      font-size: clamp(16px, 2.5vw, 20px);
+      font-weight: 600;
+      color: #191919;
+      margin-bottom: 8px;
+    }
+
+    .history-description {
+      font-size: clamp(14px, 2vw, 16px);
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .history-dot {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 16px;
+      height: 16px;
+      background: #0201AD;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .vision-mission {
+        grid-template-columns: 1fr;
+        gap: 60px;
+      }
+
+      .values-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+
+      .team-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+
+      .history-timeline::before {
+        left: 20px;
+      }
+
+      .history-item {
+        flex-direction: row !important;
+        padding-left: 60px;
+      }
+
+      .history-content {
+        padding: 0;
+      }
+
+      .history-dot {
+        left: 20px;
+      }
+
+      .company-section,
+      .team-section,
+      .history-section {
+        padding: 80px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header Navigation -->
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">
+        <a href="index.html">
+          <img src="./img/logo.svg" alt="AEROGRID Logo" class="logo-img">
+        </a>
+      </div>
+      <nav class="nav">
+        <a href="company.html" class="nav-link active">회사소개</a>
+        <a href="business.html" class="nav-link">사업영역</a>
+        <a href="media.html" class="nav-link">미디어센터</a>
+        <a href="career.html" class="nav-link">채용</a>
+        <a href="contact.html" class="nav-link">문의하기</a>
+        <div class="nav-divider"></div>
+        <div class="language-selector">
+          <span class="language-text">KR</span>
+          <img src="./img/arrow_down.svg" alt="Arrow Down" class="language-arrow">
+        </div>
+        <div class="menu-icon">
+          <img src="./img/menu.svg" alt="Menu" class="menu-img">
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Company Hero Section -->
+  <section class="company-hero">
+    <div class="company-hero-content">
+      <h1>회사소개</h1>
+      <p>하늘의 데이터를 모두에게 전달하는 혁신적인 드론 솔루션을 제공합니다</p>
+    </div>
+  </section>
+
+  <!-- Vision & Mission Section -->
+  <section class="company-section">
+    <div class="company-container">
+      <h2 class="section-title">비전과 미션</h2>
+      <div class="vision-mission">
+        <div class="vision-mission-item">
+          <h3>비전</h3>
+          <p>하늘의 데이터를 모두에게 전달하여, 누구나 신뢰할 수 있는 드론 데이터와 개방형 플랫폼으로 의사결정을 바꾸는 글로벌 리더가 되겠습니다.</p>
+        </div>
+        <div class="vision-mission-item">
+          <h3>미션</h3>
+          <p>산업용 자율비행 드론부터 관제·AI 비전까지, 최첨단 기술을 통해 인프라의 생산성과 안전성을 동시에 높이는 혁신적인 솔루션을 제공합니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Core Values Section -->
+  <section class="company-section">
+    <div class="company-container">
+      <h2 class="section-title">핵심 가치</h2>
+      <div class="values-grid">
+        <div class="value-item">
+          <h4>혁신</h4>
+          <p>최첨단 드론 기술과 AI를 활용하여 기존의 한계를 뛰어넘는 혁신적인 솔루션을 제공합니다.</p>
+        </div>
+        <div class="value-item">
+          <h4>신뢰</h4>
+          <p>정확하고 신뢰할 수 있는 데이터를 바탕으로 고객의 중요한 의사결정을 지원합니다.</p>
+        </div>
+        <div class="value-item">
+          <h4>안전</h4>
+          <p>모든 드론 운영과 데이터 처리 과정에서 최고 수준의 안전성을 보장합니다.</p>
+        </div>
+        <div class="value-item">
+          <h4>효율성</h4>
+          <p>자동화된 워크플로와 AI 분석을 통해 업무 효율성을 극대화합니다.</p>
+        </div>
+        <div class="value-item">
+          <h4>지속가능성</h4>
+          <p>환경 친화적인 기술로 지속 가능한 미래를 만들어갑니다.</p>
+        </div>
+        <div class="value-item">
+          <h4>협력</h4>
+          <p>고객과 파트너와의 긴밀한 협력을 통해 상호 성장을 추구합니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Team Section -->
+  <section class="team-section">
+    <div class="company-container">
+      <h2 class="section-title">팀 소개</h2>
+      <div class="team-grid">
+        <div class="team-member">
+          <img src="./img/hero_Image-2.jpg" alt="CEO">
+          <h4>김하늘</h4>
+          <p>Chief Executive Officer</p>
+          <div class="role">CEO</div>
+        </div>
+        <div class="team-member">
+          <img src="./img/hero_Image-3.jpg" alt="CTO">
+          <h4>박드론</h4>
+          <p>Chief Technology Officer</p>
+          <div class="role">CTO</div>
+        </div>
+        <div class="team-member">
+          <img src="./img/hero_Image-4.jpg" alt="CFO">
+          <h4>이데이터</h4>
+          <p>Chief Financial Officer</p>
+          <div class="role">CFO</div>
+        </div>
+        <div class="team-member">
+          <img src="./img/hero_Image-1.jpg" alt="COO">
+          <h4>최운영</h4>
+          <p>Chief Operating Officer</p>
+          <div class="role">COO</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Company History Section -->
+  <section class="history-section">
+    <div class="company-container">
+      <h2 class="section-title">회사 연혁</h2>
+      <div class="history-timeline">
+        <div class="history-item">
+          <div class="history-dot"></div>
+          <div class="history-content">
+            <div class="history-year">2020</div>
+            <div class="history-title">회사 설립</div>
+            <div class="history-description">AEROGRID 설립 및 드론 기술 연구개발 시작</div>
+          </div>
+        </div>
+        <div class="history-item">
+          <div class="history-dot"></div>
+          <div class="history-content">
+            <div class="history-year">2021</div>
+            <div class="history-title">첫 번째 상용 제품 출시</div>
+            <div class="history-description">산업용 자율비행 드론 시스템 상용화</div>
+          </div>
+        </div>
+        <div class="history-item">
+          <div class="history-dot"></div>
+          <div class="history-content">
+            <div class="history-year">2022</div>
+            <div class="history-title">AI 비전 기술 도입</div>
+            <div class="history-description">머신러닝 기반 실시간 분석 시스템 개발</div>
+          </div>
+        </div>
+        <div class="history-item">
+          <div class="history-dot"></div>
+          <div class="history-content">
+            <div class="history-year">2023</div>
+            <div class="history-title">글로벌 진출</div>
+            <div class="history-description">해외 시장 진출 및 파트너십 확대</div>
+          </div>
+        </div>
+        <div class="history-item">
+          <div class="history-dot"></div>
+          <div class="history-content">
+            <div class="history-year">2024</div>
+            <div class="history-title">플랫폼 서비스 런칭</div>
+            <div class="history-description">클라우드 기반 드론 데이터 플랫폼 서비스 시작</div>
+          </div>
+        </div>
+        <div class="history-item">
+          <div class="history-dot"></div>
+          <div class="history-content">
+            <div class="history-year">2025</div>
+            <div class="history-title">미래 준비</div>
+            <div class="history-description">차세대 드론 기술 연구 및 지속가능한 성장 모델 구축</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer Section -->
+  <footer class="footer-section">
+    <div class="footer-container">
+      <div class="footer-center-content">
+        <div class="footer-text">
+          <h2 class="footer-title">
+            <div class="text-content">
+              <div class="title-line" data-line="1">
+                <span class="line-text">에어로그리드와 함께</span>
+              </div>
+              <div class="title-line" data-line="2">
+                <span class="line-text">모든 현장의 안전과 효율을 동시에</span>
+              </div>
+            </div>
+          </h2>
+        </div>
+        <button class="footer-contact-btn common-btn">
+          <span class="common-btn-text">문의하기</span>
+          <div class="common-btn-arrow">
+            <img src="./img/arrow-right.svg" alt="arrow right" width="24" height="24">
+          </div>
+        </button>
+      </div>
+      <div class="footer-logo">
+        <img src="./img/logo.svg" alt="Aerogrid Logo" class="footer-logo-img">
+      </div>
+      <div class="footer-social-links">
+        <a href="#" class="social-link">Instagram</a>
+        <a href="#" class="social-link">Youtube</a>
+        <a href="#" class="social-link">Blog</a>
+        <a href="#" class="social-link">LinkedIn</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Custom Cursor -->
+  <div id="custom-cursor" aria-hidden="true"></div>
+
+  <script src="./script.js"></script>
+</body>
+</html>

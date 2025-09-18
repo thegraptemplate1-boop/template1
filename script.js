@@ -248,40 +248,69 @@ document.addEventListener('DOMContentLoaded', function() {
     // 2단계: 이미지 전환
     setTimeout(() => {
       // 현재 활성 이미지 비활성화
-      images[currentSlide].classList.remove('active');
-      dots[currentSlide].classList.remove('active');
+      if (images[currentSlide]) {
+        images[currentSlide].classList.remove('active');
+        images[currentSlide].style.opacity = '0';
+        images[currentSlide].style.visibility = 'hidden';
+      }
+      if (dots[currentSlide]) {
+        dots[currentSlide].classList.remove('active');
+      }
       
       // 이전 슬라이드의 프로그레스 바 즉시 초기화
       const prevDot = dots[currentSlide];
-      const prevProgressCircle = prevDot.querySelector('.progress-ring-circle');
-      if (prevProgressCircle) {
-        const radius = 12;
-        const circumference = 2 * Math.PI * radius;
-        prevProgressCircle.style.strokeDashoffset = circumference; // 0% 상태로 즉시 초기화
+      if (prevDot) {
+        const prevProgressCircle = prevDot.querySelector('.progress-ring-circle');
+        if (prevProgressCircle) {
+          const radius = 12;
+          const circumference = 2 * Math.PI * radius;
+          prevProgressCircle.style.strokeDashoffset = circumference; // 0% 상태로 즉시 초기화
+        }
       }
       
       // 새로운 이미지 활성화
-      images[index].classList.add('active');
-      dots[index].classList.add('active');
+      if (images[index]) {
+        images[index].classList.add('active');
+        images[index].style.opacity = '1';
+        images[index].style.visibility = 'visible';
+      }
+      if (dots[index]) {
+        dots[index].classList.add('active');
+      }
       
       currentSlide = index;
       
-      // 텍스트 내용 변경
+      // 텍스트 내용 변경 - 동적 콘텐츠 사용
       const titleContent = heroTitle.querySelector('.text-content');
       const subtitleContent = heroSubtitle.querySelector('.text-content');
       
-      // 줄바꿈된 텍스트를 div로 감싸기
-      const titleText = slideTexts[index].title;
-      if (titleText.includes('<br>')) {
-        const lines = titleText.split('<br>');
-        titleContent.innerHTML = lines.map((line, i) => 
-          `<div class="title-line" data-line="${i}"><span class="line-text">${line.trim()}</span></div>`
-        ).join('');
-      } else {
-        titleContent.innerHTML = `<div class="title-line" data-line="0"><span class="line-text">${titleText}</span></div>`;
+      // 동적 콘텐츠에서 슬라이드 텍스트 가져오기
+      let titleText = '하늘을 설계하다';
+      let subtitleText = '산업용 자율비행 드론부터 관제·AI 비전까지';
+      
+      if (window.contentData && window.contentData.hero && window.contentData.hero.slides) {
+        const activeSlides = window.contentData.hero.slides.filter(slide => slide.active);
+        if (activeSlides[index]) {
+          titleText = activeSlides[index].title || titleText;
+          subtitleText = activeSlides[index].subtitle || subtitleText;
+        }
+      } else if (slideTexts[index]) {
+        // 폴백: 정적 데이터 사용
+        titleText = slideTexts[index].title;
+        subtitleText = slideTexts[index].subtitle;
       }
       
-      subtitleContent.innerHTML = slideTexts[index].subtitle;
+      // 타이틀과 서브타이틀을 애니메이션 구조로 업데이트
+      if (titleText.includes('<br>')) {
+        const lines = titleText.split('<br>');
+        heroTitle.innerHTML = `<span class="text-content">${lines.map((line, i) => 
+          `<div class="title-line" data-line="${i}"><span class="line-text">${line.trim()}</span></div>`
+        ).join('')}</span>`;
+      } else {
+        heroTitle.innerHTML = `<span class="text-content"><div class="title-line" data-line="0"><span class="line-text">${titleText}</span></div></span>`;
+      }
+      
+      heroSubtitle.innerHTML = `<span class="text-content">${subtitleText}</span>`;
       
       // exit 클래스 제거하고 enter 클래스 추가
       heroTitle.classList.remove('exit');
@@ -464,6 +493,101 @@ window.addEventListener('load', function() {
   const section   = document.querySelector('.vision-section');
   if (!section) return;
 
+  // 화면 크기에 따라 translateY 값을 동적으로 계산하는 함수
+  function updateTextLineTransform() {
+    const lines = document.querySelectorAll('.text-line');
+    const screenWidth = window.innerWidth;
+    
+    lines.forEach(line => {
+      let translateY = '100%'; // 기본값
+      
+      if (screenWidth <= 400) {
+        // 400px 이하에서 세 줄로 떨어지는 경우를 고려한 계산
+        const textContent = line.textContent;
+        
+        if (textContent === 'WHAT WE') {
+          translateY = '120%';
+        } else if (textContent === 'WANT TO') {
+          // 'WANT TO' 부분
+          translateY = '120%';
+        } else if (textContent === 'DO') {
+          // 'DO' 부분 - 세 번째 줄로 떨어질 때를 고려
+          translateY = '120%';
+        }
+      } else if (screenWidth <= 768) {
+        // 768px 이하에서 일반적인 모바일 처리 (401px 이상에서는 두 줄로 처리)
+        const textContent = line.textContent;
+        
+        if (textContent === 'WHAT WE') {
+          translateY = '130%';
+        } else if (textContent === 'WANT TO') {
+          translateY = '150%';
+        } else if (textContent === 'DO') {
+          translateY = '150%';
+        } else if (textContent === 'WANT TO DO') {
+          // 768px ~ 401px 해상도에서 'WANT TO DO' 마스크 위치 조정
+          translateY = '150%';
+        }
+      } else if (screenWidth <= 1200) {
+        translateY = '180%'; // 태블릿에서 중간 이동
+      } else if (screenWidth <= 1400) {
+        translateY = '140%'; // 작은 데스크톱에서 약간 이동
+      }
+      
+      // transition이 적용되지 않은 상태에서만 transform 설정
+      if (!line.style.transition) {
+        line.style.transform = `translateY(${translateY})`;
+      }
+    });
+  }
+
+  // 화면 크기에 따라 HTML 구조를 동적으로 변경하는 함수
+  function updateTextStructure() {
+    const screenWidth = window.innerWidth;
+    const visionTitle = document.querySelector('.vision-title');
+    
+    if (!visionTitle) return;
+    
+    if (screenWidth <= 400) {
+      // 400px 이하: 세 줄로 분리
+      const currentStructure = visionTitle.innerHTML;
+      if (!currentStructure.includes('data-text="WANT TO"')) {
+        visionTitle.innerHTML = `
+          <div class="headline-line">
+            <span class="text-line" data-text="WHAT WE">WHAT WE</span>
+          </div>
+          <div class="headline-line">
+            <span class="text-line" data-text="WANT TO">WANT TO</span>
+          </div>
+          <div class="headline-line">
+            <span class="text-line" data-text="DO">DO</span>
+          </div>
+        `;
+      }
+    } else {
+      // 401px 이상: 두 줄로 합치기
+      const currentStructure = visionTitle.innerHTML;
+      if (currentStructure.includes('data-text="WANT TO"')) {
+        visionTitle.innerHTML = `
+          <div class="headline-line">
+            <span class="text-line" data-text="WHAT WE">WHAT WE</span>
+          </div>
+          <div class="headline-line">
+            <span class="text-line" data-text="WANT TO DO">WANT TO DO</span>
+          </div>
+        `;
+      }
+    }
+  }
+
+  // 초기 설정 및 리사이즈 이벤트 리스너
+  updateTextStructure();
+  updateTextLineTransform();
+  window.addEventListener('resize', () => {
+    updateTextStructure();
+    updateTextLineTransform();
+  });
+
                const stage     = section.querySelector('.vision-container');
   const header    = section.querySelector('.vision-text');
          const headlineLines = section.querySelectorAll('.headline-line');
@@ -553,8 +677,44 @@ window.addEventListener('load', function() {
            headlineLines.forEach((line) => {
              const textLine = line.querySelector('.text-line');
              if (textLine) {
-               // 등장과 같은 0.4초 transition으로 사라짐
-               textLine.style.transform = `translateY(100%)`;
+               // 화면 크기에 따른 동적 translateY 값으로 사라짐
+               const screenWidth = window.innerWidth;
+               let translateY = '100%';
+               
+               if (screenWidth <= 400) {
+                 // 400px 이하에서 세 줄로 떨어지는 경우를 고려한 계산
+                 const textContent = textLine.textContent;
+                 
+                 if (textContent === 'WHAT WE') {
+                   translateY = '120%';
+                 } else if (textContent === 'WANT TO') {
+                   // 'WANT TO' 부분
+                   translateY = '120%';
+                 } else if (textContent === 'DO') {
+                   // 'DO' 부분 - 세 번째 줄로 떨어질 때를 고려
+                   translateY = '120%';
+                 }
+               } else if (screenWidth <= 768) {
+                 // 768px 이하에서 일반적인 모바일 처리 (401px 이상에서는 두 줄로 처리)
+                 const textContent = textLine.textContent;
+                 
+                 if (textContent === 'WHAT WE') {
+                   translateY = '130%';
+                 } else if (textContent === 'WANT TO') {
+                   translateY = '150%';
+                 } else if (textContent === 'DO') {
+                   translateY = '150%';
+                 } else if (textContent === 'WANT TO DO') {
+                   // 768px ~ 401px 해상도에서 'WANT TO DO' 마스크 위치 조정
+                   translateY = '150%';
+                 }
+               } else if (screenWidth <= 1200) {
+                 translateY = '180%';
+               } else if (screenWidth <= 1400) {
+                 translateY = '140%';
+               }
+               
+               textLine.style.transform = `translateY(${translateY})`;
              }
            });
          }
@@ -565,24 +725,59 @@ window.addEventListener('load', function() {
              /* 2) 텍스트 채우기 (8% ~ 30% = 80vh ~ 300vh) */
          if (p >= fillStart && p <= fillEnd) {
            const tFill = (p - fillStart) / (fillEnd - fillStart); // 0~1
+           const screenWidth = window.innerWidth;
            
            // "WHAT WE" 줄: 8% ~ 19%에서 채워짐 (0% ~ 50% 구간)
            // "WANT TO DO" 줄: 19% ~ 30%에서 채워짐 (50% ~ 100% 구간)
            lines.forEach((el, index) => {
-             const lineStart = index * 0.5; // 각 줄의 시작 비율 (0, 0.5)
-             const lineEnd = (index + 1) * 0.5; // 각 줄의 끝 비율 (0.5, 1.0)
+             const textContent = el.textContent;
+             
+             // 400px 이하에서 'DO'를 별도 처리
+             if (screenWidth <= 400 && textContent === 'DO') {
+               // 'DO'는 세 번째 줄로 처리 (인덱스 2)
+               const lineStart = 2 * 0.33; // 0.66
+               const lineEnd = 3 * 0.33; // 0.99
+               
+               if (tFill <= lineStart) {
+                 el.style.setProperty('--p', '0%');
+               } else if (tFill >= lineEnd) {
+                 el.style.setProperty('--p', '100%');
+               } else {
+                 const lineProgress = (tFill - lineStart) / 0.33;
+                 const percentage = Math.max(0, Math.min(100, lineProgress * 100));
+                 el.style.setProperty('--p', `${percentage}%`);
+               }
+             } else if (screenWidth <= 400 && textContent === 'WANT TO') {
+               // 400px 이하에서 'WANT TO'는 두 번째 줄로 처리 (인덱스 1)
+               const lineStart = 1 * 0.33; // 0.33
+               const lineEnd = 2 * 0.33; // 0.66
+               
+               if (tFill <= lineStart) {
+                 el.style.setProperty('--p', '0%');
+               } else if (tFill >= lineEnd) {
+                 el.style.setProperty('--p', '100%');
+               } else {
+                 const lineProgress = (tFill - lineStart) / 0.33;
+                 const percentage = Math.max(0, Math.min(100, lineProgress * 100));
+                 el.style.setProperty('--p', `${percentage}%`);
+               }
+             } else {
+               // 일반적인 처리 (두 줄 또는 400px 초과)
+               const lineStart = index * 0.5; // 각 줄의 시작 비율 (0, 0.5)
+               const lineEnd = (index + 1) * 0.5; // 각 줄의 끝 비율 (0.5, 1.0)
 
-             if (tFill <= lineStart) {
-               // 아직 이 줄이 시작되지 않음
-               el.style.setProperty('--p', '0%');
-             } else if (tFill >= lineEnd) {
-               // 이 줄이 완전히 채워짐
-               el.style.setProperty('--p', '100%');
-  } else {
-               // 이 줄이 진행 중 - 스크롤과 정확히 1:1 매칭
-               const lineProgress = (tFill - lineStart) / 0.5;
-               const percentage = Math.max(0, Math.min(100, lineProgress * 100));
-               el.style.setProperty('--p', `${percentage}%`);
+               if (tFill <= lineStart) {
+                 // 아직 이 줄이 시작되지 않음
+                 el.style.setProperty('--p', '0%');
+               } else if (tFill >= lineEnd) {
+                 // 이 줄이 완전히 채워짐
+                 el.style.setProperty('--p', '100%');
+               } else {
+                 // 이 줄이 진행 중 - 스크롤과 정확히 1:1 매칭
+                 const lineProgress = (tFill - lineStart) / 0.5;
+                 const percentage = Math.max(0, Math.min(100, lineProgress * 100));
+                 el.style.setProperty('--p', `${percentage}%`);
+               }
              }
            });
          } else if (p < fillStart) {
@@ -608,9 +803,20 @@ window.addEventListener('load', function() {
                  const viewportWidth = window.innerWidth;
                  const viewportHeight = window.innerHeight;
                  
-                 // 카드 크기를 뷰포트 기준으로 계산
-                 const cardWidthPercent = (480 / viewportWidth) * 100;
-                 const cardHeightPercent = (640 / viewportHeight) * 100;
+                 // 카드 크기를 뷰포트 기준으로 계산 (반응형 고려)
+                 let cardWidth, cardHeight;
+                 if (viewportWidth <= 900) {
+                   // 900px 이하에서는 작은 카드 크기 사용
+                   cardWidth = 320;
+                   cardHeight = 426;
+                 } else {
+                   // 900px 초과에서는 기본 카드 크기 사용
+                   cardWidth = 480;
+                   cardHeight = 640;
+                 }
+                 
+                 const cardWidthPercent = (cardWidth / viewportWidth) * 100;
+                 const cardHeightPercent = (cardHeight / viewportHeight) * 100;
                  
                  earthBackground.style.setProperty('--earth-mask-width', `${cardWidthPercent}%`);
                  earthBackground.style.setProperty('--earth-mask-height', `${cardHeightPercent}%`);
@@ -620,13 +826,25 @@ window.addEventListener('load', function() {
                else if (p >= earthMaskExpand) {
                  const tExpand = Math.max(0, Math.min(1, (p - earthMaskExpand) / (zoomEnd - earthMaskExpand)));
                
-               // 58% 시점의 지구 마스크 크기 (576 * 768)로 마스크 시작
+               // 58% 시점의 지구 마스크 크기로 마스크 시작 (반응형 고려)
                const viewportWidth = window.innerWidth;
                const viewportHeight = window.innerHeight;
                
-               // 58% 시점의 실제 마스크 크기
-               const cardWidth = 576;
-               const cardHeight = 768;
+               // 58% 시점의 실제 마스크 크기 (반응형 + 1.2배 확대 적용)
+               let baseCardWidth, baseCardHeight;
+               if (viewportWidth <= 900) {
+                 // 900px 이하에서는 작은 카드 크기 사용
+                 baseCardWidth = 320;
+                 baseCardHeight = 426;
+               } else {
+                 // 900px 초과에서는 기본 카드 크기 사용
+                 baseCardWidth = 480;
+                 baseCardHeight = 640;
+               }
+               
+               // 58% 시점에서 카드가 1.2배 확대된 상태의 크기
+               const cardWidth = baseCardWidth * 1.2;
+               const cardHeight = baseCardHeight * 1.2;
                
                const cardWidthPercent = (cardWidth / viewportWidth) * 100;
                const cardHeightPercent = (cardHeight / viewportHeight) * 100;
@@ -765,28 +983,54 @@ window.addEventListener('load', function() {
   let isEarthMode = false;
   
   function switchCardImage() {
-    if (cardImages.length === 0) return;
+    // 동적으로 현재 카드 이미지들을 다시 가져오기
+    const currentCardImages = document.querySelectorAll('.card-image');
+    if (currentCardImages.length === 0) return;
 
     // 다음 이미지 인덱스 계산
-    const nextImageIndex = (currentImageIndex + 1) % cardImages.length;
-    const currentActive = cardImages[currentImageIndex];
-    const nextImage = cardImages[nextImageIndex];
+    const nextImageIndex = (currentImageIndex + 1) % currentCardImages.length;
+    const currentActive = currentCardImages[currentImageIndex];
+    const nextImage = currentCardImages[nextImageIndex];
 
-    // 1. 다음 이미지를 먼저 불투명하게 설정 (겹침 방지)
-    nextImage.classList.add('active');
-    nextImage.style.opacity = '1';
+    console.log('카드 이미지 전환:', {
+      currentIndex: currentImageIndex,
+      nextIndex: nextImageIndex,
+      totalImages: currentCardImages.length,
+      currentActive: !!currentActive,
+      nextImage: !!nextImage
+    });
 
-    // 2. 현재 이미지를 페이드 아웃
-    if (currentActive) {
-      currentActive.style.opacity = '0';
-
-      // 페이드 아웃 완료 후 클래스 제거
+    // 자연스러운 페이드 전환을 위한 단계별 처리
+    if (nextImage && currentActive) {
+      // 1단계: 다음 이미지를 준비 (투명하게 설정)
+      nextImage.style.opacity = '0';
+      nextImage.style.visibility = 'visible';
+      nextImage.classList.add('active');
+      
+      // 2단계: 다음 이미지 페이드 인 (0.3초)
       setTimeout(() => {
+        nextImage.style.transition = 'opacity 0.3s ease-in-out';
+        nextImage.style.opacity = '1';
+      }, 50);
+      
+      // 3단계: 현재 이미지 페이드 아웃 (0.3초)
+      currentActive.style.transition = 'opacity 0.3s ease-in-out';
+      currentActive.style.opacity = '0';
+      
+      // 4단계: 페이드 아웃 완료 후 현재 이미지 숨김
+      setTimeout(() => {
+        currentActive.style.visibility = 'hidden';
         currentActive.classList.remove('active');
-      }, 400); // transition 시간의 절반
+        currentActive.style.transition = ''; // transition 초기화
+      }, 350);
+      
+      // 5단계: 다음 이미지 transition 초기화
+      setTimeout(() => {
+        nextImage.style.transition = ''; // transition 초기화
+      }, 400);
     }
 
-    // 3. 현재 인덱스 업데이트
+    // 현재 인덱스 업데이트
     currentImageIndex = nextImageIndex;
   }
 
@@ -1066,3 +1310,515 @@ window.addEventListener('load', function() {
 
 // Career Card Border Animation - CodePen 스타일2 방식 (CSS-only)
 // JavaScript 불필요 - CSS :hover 선택자로 모든 애니메이션 처리
+
+// ========== 동적 콘텐츠 로딩 시스템 ==========
+(() => {
+  let contentData = null; // 전역 콘텐츠 데이터
+  
+  // 콘텐츠 로드 함수
+  async function loadContent() {
+    try {
+      const response = await fetch('/content.json');
+      if (!response.ok) {
+        throw new Error('콘텐츠를 불러올 수 없습니다');
+      }
+      contentData = await response.json();
+      window.contentData = contentData; // 전역 변수로 저장
+      console.log('콘텐츠 로드 완료:', contentData);
+      
+      // 이미지 URL 테스트
+      if (contentData.hero && contentData.hero.slides && contentData.hero.slides[0]) {
+        const testUrl = contentData.hero.slides[0].background;
+        console.log('첫 번째 히어로 이미지 URL 테스트:', testUrl);
+        
+        // 이미지 로드 테스트
+        const testImg = new Image();
+        testImg.onload = () => {
+          console.log('이미지 로드 테스트 성공:', testUrl);
+        };
+        testImg.onerror = () => {
+          console.error('이미지 로드 테스트 실패:', testUrl);
+        };
+        testImg.src = testUrl;
+      }
+      
+      applyContent(contentData);
+    } catch (error) {
+      console.error('콘텐츠 로드 실패:', error);
+      // 기본 콘텐츠 사용 (HTML에 이미 있는 내용)
+    }
+  }
+  
+  // 콘텐츠 적용 함수
+  function applyContent(content) {
+    if (!content) return;
+    
+    // Hero 섹션 업데이트
+    updateHeroSection(content.hero);
+    
+    // Vision 섹션 업데이트
+    updateVisionSection(content.vision);
+    
+    // Business 섹션 업데이트
+    updateBusinessSection(content.business);
+    
+    // Media 섹션 업데이트
+    updateMediaSection(content.media);
+    
+    // Career 섹션 업데이트
+    updateCareerSection(content.career);
+    
+    // Footer 섹션 업데이트
+    updateFooterSection(content.footer);
+    
+    // SEO 메타데이터 업데이트
+    updateSEOMeta(content.seo);
+  }
+  
+  // URL을 절대 경로로 변환하는 헬퍼 함수
+  function convertToAbsoluteUrl(url) {
+    if (!url) return url;
+    
+    // 이미 절대 URL인 경우 그대로 반환
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    
+    // 상대 경로인 경우 절대 경로로 변환
+    if (url.startsWith('/')) {
+      return window.location.origin + url;
+    }
+    
+    // 상대 경로인 경우 현재 도메인 추가
+    return window.location.origin + '/' + url.replace(/^\.\//, '');
+  }
+  
+  // Hero 섹션 업데이트
+  function updateHeroSection(heroData) {
+    if (!heroData?.slides) return;
+    
+    const heroBackground = document.querySelector('.hero-background');
+    const heroTitle = document.querySelector('.hero-title .text-content');
+    const heroSubtitle = document.querySelector('.hero-subtitle .text-content');
+    const paginationDots = document.querySelectorAll('.pagination-dots .dot');
+    
+    if (!heroBackground || !heroTitle || !heroSubtitle) return;
+    
+    // 활성 슬라이드만 필터링
+    const activeSlides = heroData.slides.filter(slide => slide.active);
+    
+    // 배경 이미지 업데이트
+    const bgImages = heroBackground.querySelectorAll('.hero-bg-image');
+    console.log('히어로 배경 이미지 요소들:', bgImages);
+    console.log('활성 슬라이드들:', activeSlides);
+    
+    bgImages.forEach((img, index) => {
+      if (activeSlides[index]) {
+        const imageUrl = convertToAbsoluteUrl(activeSlides[index].background);
+        console.log(`히어로 이미지 ${index + 1} URL:`, imageUrl);
+        
+        // 기존 src 제거 후 새로 설정
+        img.src = '';
+        img.src = imageUrl;
+        img.alt = `AEROGRID Hero Background ${index + 1}`;
+        
+        // 모든 이미지를 로드하되 첫 번째만 표시
+        img.style.display = 'block';
+        img.style.opacity = index === 0 ? '1' : '0';
+        img.style.visibility = index === 0 ? 'visible' : 'hidden';
+        
+        if (index === 0) {
+          img.classList.add('active');
+        } else {
+          img.classList.remove('active');
+        }
+        
+        // 이미지 로드 이벤트 추가
+        img.onload = () => {
+          console.log(`히어로 이미지 ${index + 1} 로드 성공:`, imageUrl);
+          // 로드 성공 후 첫 번째 이미지만 표시
+          if (index === 0) {
+            img.style.opacity = '1';
+            img.style.visibility = 'visible';
+          } else {
+            img.style.opacity = '0';
+            img.style.visibility = 'hidden';
+          }
+        };
+        img.onerror = () => {
+          console.error(`히어로 이미지 ${index + 1} 로드 실패:`, imageUrl);
+        };
+      } else {
+        img.style.display = 'none';
+        img.classList.remove('active');
+      }
+    });
+    
+    // 첫 번째 슬라이드의 텍스트만 설정 (애니메이션 구조 포함)
+    if (activeSlides[0]) {
+      const titleText = activeSlides[0].title || '하늘을 설계하다';
+      const subtitleText = activeSlides[0].subtitle || '산업용 자율비행 드론부터 관제·AI 비전까지';
+      
+      // 타이틀 텍스트를 애니메이션 구조로 생성
+      if (titleText.includes('<br>')) {
+        const lines = titleText.split('<br>');
+        const titleContent = heroTitle.querySelector('.text-content');
+        if (titleContent) {
+          titleContent.innerHTML = lines.map((line, i) => 
+            `<div class="title-line" data-line="${i}"><span class="line-text">${line.trim()}</span></div>`
+          ).join('');
+        }
+      } else {
+        heroTitle.innerHTML = `<span class="text-content"><div class="title-line" data-line="0"><span class="line-text">${titleText}</span></div></span>`;
+      }
+      
+      // 서브타이틀은 단순하게 설정
+      heroSubtitle.innerHTML = `<span class="text-content">${subtitleText}</span>`;
+    }
+    
+    // 페이지네이션 도트 업데이트
+    paginationDots.forEach((dot, index) => {
+      if (index < activeSlides.length) {
+        dot.style.display = 'block';
+        dot.classList.toggle('active', index === 0);
+      } else {
+        dot.style.display = 'none';
+      }
+    });
+  }
+  
+  // Vision 섹션 업데이트
+  function updateVisionSection(visionData) {
+    if (!visionData) return;
+    
+    const earthTitle = document.querySelector('.earth-title');
+    const earthSubtitle = document.querySelector('.earth-subtitle');
+    const earthImage = document.querySelector('.earth-image');
+    const cardImages = document.querySelectorAll('.card-image');
+    
+    // Earth 텍스트 업데이트
+    if (earthTitle && visionData.title) {
+      earthTitle.textContent = visionData.title;
+      earthTitle.setAttribute('data-text', visionData.title);
+    }
+    
+    if (earthSubtitle && visionData.subtitle) {
+      earthSubtitle.textContent = visionData.subtitle;
+      earthSubtitle.setAttribute('data-text', visionData.subtitle);
+    }
+    
+    // Earth 배경 이미지 업데이트
+    if (earthImage && visionData.backgroundImage) {
+      const imageUrl = convertToAbsoluteUrl(visionData.backgroundImage);
+      console.log('비전 Earth 배경 이미지 URL:', imageUrl);
+      
+      // 기존 src 제거 후 새로 설정
+      earthImage.src = '';
+      earthImage.src = imageUrl;
+      
+      earthImage.onload = () => {
+        console.log('비전 Earth 배경 이미지 로드 성공:', imageUrl);
+        earthImage.style.opacity = '1';
+        earthImage.style.visibility = 'visible';
+      };
+      earthImage.onerror = () => {
+        console.error('비전 Earth 배경 이미지 로드 실패:', imageUrl);
+      };
+    }
+    
+    // 롤링 이미지 업데이트
+    if (visionData.rollingImages && cardImages.length > 0) {
+      console.log('비전 롤링 이미지들:', visionData.rollingImages);
+      console.log('비전 카드 이미지 요소들:', cardImages);
+      
+      cardImages.forEach((img, index) => {
+        if (visionData.rollingImages[index]) {
+          const imageUrl = convertToAbsoluteUrl(visionData.rollingImages[index]);
+          console.log(`비전 롤링 이미지 ${index + 1} URL:`, imageUrl);
+          
+          // 기존 src 제거 후 새로 설정
+          img.src = '';
+          img.src = imageUrl;
+          
+          // 모든 이미지를 로드하되 스크롤 애니메이션 로직에 맡김
+          img.style.display = 'block';
+          
+          // 스크롤 애니메이션의 자동 전환 로직이 작동하도록 초기 상태만 설정
+          if (index === 0) {
+            img.classList.add('active');
+            img.style.opacity = '1';
+            img.style.visibility = 'visible';
+          } else {
+            img.classList.remove('active');
+            img.style.opacity = '0';
+            img.style.visibility = 'hidden';
+          }
+          
+          img.onload = () => {
+            console.log(`비전 롤링 이미지 ${index + 1} 로드 성공:`, imageUrl);
+            // 로드 성공 후 스크롤 애니메이션 로직이 제어하도록 함
+          };
+          img.onerror = () => {
+            console.error(`비전 롤링 이미지 ${index + 1} 로드 실패:`, imageUrl);
+          };
+        } else {
+          img.style.display = 'none';
+          img.classList.remove('active');
+        }
+      });
+    }
+  }
+  
+  // Business 섹션 업데이트
+  function updateBusinessSection(businessData) {
+    if (!businessData) return;
+    
+    const businessSubtitle = document.querySelector('.business-subtitle');
+    const businessMoreBtn = document.querySelector('.business-more-btn .common-btn-text');
+    const businessCards = document.querySelectorAll('.business-card');
+    
+    // 서브타이틀 업데이트
+    if (businessSubtitle && businessData.subtitleHtml) {
+      businessSubtitle.innerHTML = businessData.subtitleHtml;
+    }
+    
+    // 더보기 버튼 텍스트 업데이트
+    if (businessMoreBtn && businessData.moreButtonText) {
+      businessMoreBtn.textContent = businessData.moreButtonText;
+    }
+    
+    // 비즈니스 카드 업데이트
+    if (businessData.cards && businessCards.length > 0) {
+      businessCards.forEach((card, index) => {
+        if (businessData.cards[index]) {
+          const cardData = businessData.cards[index];
+          const cardImage = card.querySelector('.business-card-image');
+          const cardTitle = card.querySelector('.business-card-title');
+          const cardDescription = card.querySelector('.business-card-description');
+          
+          if (cardImage && cardData.image) {
+            const imageUrl = convertToAbsoluteUrl(cardData.image);
+            console.log(`비즈니스 카드 ${index + 1} 이미지 URL:`, imageUrl);
+            
+            // 기존 src 제거 후 새로 설정
+            cardImage.src = '';
+            cardImage.src = imageUrl;
+            cardImage.alt = cardData.title || `Business Area ${index + 1}`;
+            
+            cardImage.onload = () => {
+              console.log(`비즈니스 카드 ${index + 1} 이미지 로드 성공:`, imageUrl);
+              cardImage.style.opacity = '1';
+              cardImage.style.visibility = 'visible';
+            };
+            cardImage.onerror = () => {
+              console.error(`비즈니스 카드 ${index + 1} 이미지 로드 실패:`, imageUrl);
+            };
+          }
+          
+          if (cardTitle && cardData.title) {
+            cardTitle.textContent = cardData.title;
+          }
+          
+          if (cardDescription && cardData.desc) {
+            cardDescription.textContent = cardData.desc;
+          }
+        }
+      });
+    }
+  }
+  
+  // Media 섹션 업데이트
+  function updateMediaSection(mediaData) {
+    if (!mediaData) return;
+    
+    const mediaIntro = document.querySelector('.media-header p');
+    const mediaItems = document.querySelectorAll('.media-item');
+    
+    // 소개 텍스트 업데이트 (HTML 허용)
+    if (mediaIntro && mediaData.richTextIntroHtml) {
+      mediaIntro.innerHTML = mediaData.richTextIntroHtml;
+    }
+    
+    // 미디어 아이템 업데이트
+    if (mediaData.items && mediaItems.length > 0) {
+      mediaItems.forEach((item, index) => {
+        if (mediaData.items[index]) {
+          const itemData = mediaData.items[index];
+          const itemImage = item.querySelector('.media-img');
+          const itemCategory = item.querySelector('.media-category');
+          const itemTitle = item.querySelector('.media-item-title');
+          const itemDate = item.querySelector('.media-date');
+          
+          if (itemImage && itemData.image) {
+            const imageUrl = convertToAbsoluteUrl(itemData.image);
+            itemImage.src = imageUrl;
+            itemImage.alt = itemData.title || `Media Item ${index + 1}`;
+          }
+          
+          if (itemCategory && itemData.category) {
+            itemCategory.textContent = itemData.category;
+          }
+          
+          if (itemTitle && itemData.title) {
+            itemTitle.textContent = itemData.title;
+          }
+          
+          if (itemDate && itemData.date) {
+            itemDate.textContent = itemData.date;
+          }
+        }
+      });
+    }
+  }
+  
+  // Career 섹션 업데이트
+  function updateCareerSection(careerData) {
+    if (!careerData?.posts) return;
+    
+    const careerItems = document.querySelectorAll('.career-item');
+    
+    // 활성 채용 공고만 필터링하고 최대 2개로 제한
+    const activePosts = careerData.posts.filter(post => post.active).slice(0, 2);
+    
+    // 활성 공고가 없으면 기본 공고 사용
+    const postsToShow = activePosts.length > 0 ? activePosts : [
+      {
+        title: '경력직 PM/PO 채용',
+        period: { start: '2025.08.01', end: '2025.08.15' }
+      },
+      {
+        title: '2025년 R&D 인재 상시채용',
+        period: { start: '2025.01.01', end: '2025.12.31' }
+      }
+    ];
+    
+    careerItems.forEach((item, index) => {
+      if (postsToShow[index]) {
+        const postData = postsToShow[index];
+        const itemTitle = item.querySelector('.career-item-title');
+        const itemPeriod = item.querySelector('.career-period');
+        const statusElement = item.querySelector('.career-status');
+        
+        if (itemTitle && postData.title) {
+          itemTitle.textContent = postData.title;
+        }
+        
+        if (itemPeriod && postData.period) {
+          const startDate = postData.period.start ? new Date(postData.period.start).toLocaleDateString('ko-KR') : '';
+          const endDate = postData.period.end ? new Date(postData.period.end).toLocaleDateString('ko-KR') : '';
+          itemPeriod.textContent = `${startDate} ~ ${endDate}`;
+        }
+        
+        if (statusElement) {
+          statusElement.textContent = '채용 중';
+        }
+        
+        item.style.display = 'block';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  }
+  
+  // Footer 섹션 업데이트
+  function updateFooterSection(footerData) {
+    if (!footerData) return;
+    
+    const footerTitle = document.querySelector('.footer-title .line-text');
+    const footerButton = document.querySelector('.footer-contact-btn .common-btn-text');
+    const footerLogo = document.querySelector('.footer-logo-img');
+    const socialLinks = document.querySelectorAll('.social-link');
+    
+    // 푸터 타이틀 업데이트
+    if (footerTitle && footerData.title) {
+      footerTitle.textContent = footerData.title;
+    }
+    
+    // 문의하기 버튼 텍스트 업데이트
+    if (footerButton && footerData.buttonText) {
+      footerButton.textContent = footerData.buttonText;
+    }
+    
+    // 로고 이미지 업데이트
+    if (footerLogo && footerData.logo) {
+      const imageUrl = convertToAbsoluteUrl(footerData.logo);
+      footerLogo.src = imageUrl;
+    }
+    
+    // SNS 링크 업데이트
+    if (footerData.sns && socialLinks.length > 0) {
+      const snsMapping = {
+        'Instagram': footerData.sns.instagram,
+        'LinkedIn': footerData.sns.linkedin,
+        'Youtube': footerData.sns.youtube
+      };
+      
+      socialLinks.forEach(link => {
+        const linkText = link.textContent.trim();
+        if (snsMapping[linkText]) {
+          link.href = snsMapping[linkText];
+        }
+      });
+    }
+  }
+  
+  // SEO 메타데이터 업데이트
+  function updateSEOMeta(seoData) {
+    if (!seoData) return;
+    
+    // 페이지 타이틀 업데이트
+    if (seoData.title) {
+      document.title = seoData.title;
+    }
+    
+    // 메타 설명 업데이트
+    let metaDescription = document.querySelector('meta[name="description"]');
+    if (!metaDescription) {
+      metaDescription = document.createElement('meta');
+      metaDescription.name = 'description';
+      document.head.appendChild(metaDescription);
+    }
+    if (seoData.description) {
+      metaDescription.content = seoData.description;
+    }
+    
+    // 메타 키워드 업데이트
+    let metaKeywords = document.querySelector('meta[name="keywords"]');
+    if (!metaKeywords) {
+      metaKeywords = document.createElement('meta');
+      metaKeywords.name = 'keywords';
+      document.head.appendChild(metaKeywords);
+    }
+    if (seoData.keywords && Array.isArray(seoData.keywords)) {
+      metaKeywords.content = seoData.keywords.join(', ');
+    }
+    
+    // Open Graph 이미지 업데이트
+    let ogImage = document.querySelector('meta[property="og:image"]');
+    if (!ogImage) {
+      ogImage = document.createElement('meta');
+      ogImage.setAttribute('property', 'og:image');
+      document.head.appendChild(ogImage);
+    }
+    if (seoData.ogImage) {
+      ogImage.content = seoData.ogImage;
+    }
+  }
+  
+  // 미리보기 메시지 수신 (어드민 페이지에서)
+  window.addEventListener('message', (event) => {
+    if (event.data.type === 'PREVIEW_CONTENT') {
+      console.log('미리보기 콘텐츠 수신:', event.data.content);
+      applyContent(event.data.content);
+    }
+  });
+  
+  // 페이지 로드 시 콘텐츠 로드
+  document.addEventListener('DOMContentLoaded', () => {
+    loadContent();
+  });
+  
+  // 전역 함수로 내보내기 (어드민 페이지에서 사용)
+  window.applyContent = applyContent;
+  window.loadContent = loadContent;
+})();

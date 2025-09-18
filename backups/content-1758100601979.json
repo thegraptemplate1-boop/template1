@@ -1,0 +1,171 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "lastModified": "2025-09-17T09:16:23.593Z",
+    "modifiedBy": "admin",
+    "backup": {
+      "auto": true,
+      "interval": "daily",
+      "retention": 30
+    }
+  },
+  "hero": {
+    "title": "하늘을 설계하다",
+    "subtitle": "산업용 자율비행 드론부터 관제·AI 비전까지 test, test",
+    "backgrounds": [
+      "http://localhost:3000/img/hero_Image-1.jpg",
+      "http://localhost:3000/img/hero_Image-2.jpg"
+    ]
+  },
+  "vision": {
+    "title": "하늘의 데이터를 모두에게 사랑해요!",
+    "subtitle": "누구나 신뢰할 수 있는 드론 데이터와 개방형 플랫폼으로 의사결정을 바꿉니다.",
+    "rollingImages": [
+      "http://localhost:3000/img/rolling-1.jpg",
+      "http://localhost:3000/img/rolling-2.jpg",
+      "http://localhost:3000/img/rolling-3.jpg",
+      "http://localhost:3000/img/rolling-4.jpg"
+    ],
+    "backgroundImage": "http://localhost:3000/img/earth.jpg"
+  },
+  "business": {
+    "subtitleHtml": "드론 · AI · 원격관제 클라우드를 통해<br>인프라의 생산성과 안전성을 동시에 높입니다.",
+    "moreButtonText": "사업분야 더보기",
+    "cards": [
+      {
+        "image": "/img/business_area-1.jpg",
+        "title": "도시 계획",
+        "desc": "매핑, 모델링, 워크플로 자동화로 보다 효율적으로 설계하고 계획합니다.",
+        "link": "business.html"
+      },
+      {
+        "image": "/img/business_area-2.jpg",
+        "title": "공공 안전",
+        "desc": "실시간 모니터링과 AI 분석으로 안전한 도시를 만듭니다.",
+        "link": "business.html"
+      },
+      {
+        "image": "/img/business_area-3.jpg",
+        "title": "AEC 및 측량",
+        "desc": "정밀한 3D 모델링과 측량 데이터로 정확한 건설을 지원합니다.",
+        "link": "business.html"
+      },
+      {
+        "image": "/img/business_area-4.jpg",
+        "title": "환경·해양 보전",
+        "desc": "환경 변화를 모니터링하고 보전 활동을 지원합니다.",
+        "link": "business.html"
+      },
+      {
+        "image": "/img/business_area-5.jpg",
+        "title": "농업·스마트팜",
+        "desc": "스마트 농업 기술로 효율적인 작물 관리를 제공합니다.",
+        "link": "business.html"
+      }
+    ]
+  },
+  "media": {
+    "richTextIntroHtml": "<p>에어로그리드의 최신 소식과 성공 사례를 확인하세요.</p>",
+    "items": [
+      {
+        "id": "media-1",
+        "image": "/img/media-1.jpg",
+        "category": "AEC 및 측량",
+        "title": "드론과 AI를 활용한 대규모 건설 프로젝트 측량",
+        "date": "2025.04.01",
+        "order": 1
+      },
+      {
+        "id": "media-2",
+        "image": "/img/media-2.jpg",
+        "category": "도시 계획",
+        "title": "송전선 500km를 밤새 점검하는 드론 기술",
+        "date": "2025.03.21",
+        "order": 2
+      },
+      {
+        "id": "media-3",
+        "image": "/img/media-3.jpg",
+        "category": "환경·해양 보전",
+        "title": "해양 생태계 모니터링을 위한 드론 활용",
+        "date": "2025.03.15",
+        "order": 3
+      },
+      {
+        "id": "media-4",
+        "image": "/img/media-4.jpg",
+        "category": "농업·스마트팜",
+        "title": "스마트팜에서 드론을 활용한 작물 관리",
+        "date": "2025.03.10",
+        "order": 4
+      }
+    ]
+  },
+  "career": {
+    "categories": [
+      "개발",
+      "디자인",
+      "사업",
+      "운영"
+    ],
+    "posts": [
+      {
+        "id": "career-1",
+        "title": "on",
+        "category": "on",
+        "bodyHtml": "<h3>역할</h3><p>웹 애플리케이션 프론트엔드 개발 및 유지보수</p><h3>자격요건</h3><ul><li>React, Vue.js 등 프론트엔드 프레임워크 경험</li><li>JavaScript, TypeScript 숙련</li><li>반응형 웹 개발 경험</li></ul><h3>우대사항</h3><ul><li>드론/항공 분야 경험</li><li>3D 웹 개발 경험</li></ul>",
+        "period": {
+          "start": "",
+          "end": ""
+        },
+        "active": false
+      },
+      {
+        "id": "career-2",
+        "title": "on",
+        "category": "on",
+        "bodyHtml": "<h3>역할</h3><p>드론 관리 시스템의 UI/UX 디자인</p><h3>자격요건</h3><ul><li>Figma, Sketch 등 디자인 툴 숙련</li><li>사용자 경험 설계 경험</li><li>프로토타이핑 경험</li></ul>",
+        "period": {
+          "start": "",
+          "end": ""
+        },
+        "active": false
+      },
+      {
+        "id": "career-3",
+        "title": "on",
+        "category": "on",
+        "bodyHtml": "<h3>역할</h3><p>드론 서비스 사업 기회 발굴 및 파트너십 구축</p><h3>자격요건</h3><ul><li>B2B 영업 경험 3년 이상</li><li>기술 기반 서비스 영업 경험</li><li>프레젠테이션 능력</li></ul>",
+        "period": {
+          "start": "",
+          "end": ""
+        },
+        "active": false
+      }
+    ]
+  },
+  "footer": {
+    "title": "하늘을 설계하다",
+    "buttonText": "문의하기",
+    "logo": "http://localhost:3000/img/logo.svg",
+    "sns": {
+      "instagram": "https://instagram.com/aerogrid",
+      "linkedin": "https://linkedin.com/company/aerogrid",
+      "youtube": "https://youtube.com/@aerogrid"
+    }
+  },
+  "seo": {
+    "title": "AEROGRID - 하늘을 설계하다",
+    "description": "산업용 자율비행 드론부터 관제·AI 비전까지, 에어로그리드와 함께 미래를 설계하세요.",
+    "keywords": [
+      "드론",
+      "AI",
+      "원격관제",
+      "클라우드",
+      "자율비행",
+      "측량",
+      "모니터링"
+    ],
+    "ogImage": "http://localhost:3000/img/og-image.jpg"
+  }
+}
