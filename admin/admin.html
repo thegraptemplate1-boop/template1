@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AEROGRID CMS 관리자</title>
     <link rel="stylesheet" href="admin.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.2/packages/wanted-sans/documentation/webfonts/wanted-sans.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.2/packages/wanted-sans/documentation/webfonts/wanted-sans.css">
+  <link href="https://fonts.googleapis.com/css2?family=Fahkwang:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- 로그인 모달 -->
@@ -105,7 +106,8 @@
                     <div class="image-upload-zone" data-dropzone="vision-earth">
                         <div class="upload-placeholder">
                             <p>Earth 배경 이미지를 드래그하거나 클릭하여 업로드</p>
-                            <input type="file" id="visionEarthUpload" accept="image/*" hidden>
+                            <p class="file-info">지원 형식: JPG, PNG, GIF, WebP | 최대 10MB</p>
+                            <input type="file" id="visionEarthUpload" accept="image/*" class="file-input-overlay">
                         </div>
                     </div>
                     <div id="visionEarthPreview" class="image-preview"></div>
@@ -145,6 +147,12 @@
                 <div class="section-header">
                     <h2>미디어 섹션 관리</h2>
                     <p>미디어 갤러리와 소개 텍스트를 관리합니다.</p>
+                    <div class="section-toggle">
+                        <label>
+                            <input type="checkbox" id="mediaSectionActive" checked>
+                            섹션 활성화
+                        </label>
+                    </div>
                 </div>
                 
                 <div class="form-section">
@@ -159,7 +167,7 @@
 
                 <div class="form-section">
                     <h3>미디어 아이템 관리</h3>
-                    <div id="mediaItemsList" class="items-list">
+                    <div id="mediaItemsList" class="accordion-list">
                         <!-- 동적으로 생성됨 -->
                     </div>
                     <button id="addMediaItem" class="btn btn-outline">아이템 추가</button>
@@ -171,6 +179,12 @@
                 <div class="section-header">
                     <h2>채용 섹션 관리</h2>
                     <p>채용 공고와 카테고리를 관리합니다.</p>
+                    <div class="section-toggle">
+                        <label>
+                            <input type="checkbox" id="careerSectionActive" checked>
+                            섹션 활성화
+                        </label>
+                    </div>
                 </div>
                 
                 <div class="form-section">
@@ -183,7 +197,7 @@
 
                 <div class="form-section">
                     <h3>채용 공고 관리</h3>
-                    <div id="careerPostsList" class="posts-list">
+                    <div id="careerPostsList" class="accordion-list">
                         <!-- 동적으로 생성됨 -->
                     </div>
                     <button id="addCareerPost" class="btn btn-outline">공고 추가</button>
@@ -214,7 +228,8 @@
                     <div class="image-upload-zone" data-dropzone="footer-logo">
                         <div class="upload-placeholder">
                             <p>로고 이미지를 드래그하거나 클릭하여 업로드</p>
-                            <input type="file" id="footerLogoUpload" accept="image/*" hidden>
+                            <p class="file-info">지원 형식: JPG, PNG, GIF, WebP, MP4 | 최대 10MB</p>
+                            <input type="file" id="footerLogoUpload" accept="image/*,video/mp4" hidden>
                         </div>
                     </div>
                     <div id="footerLogoPreview" class="image-preview"></div>
@@ -267,7 +282,8 @@
                         <div class="image-upload-zone" data-dropzone="og-image">
                             <div class="upload-placeholder">
                                 <p>소셜 미디어 공유용 이미지를 드래그하거나 클릭하여 업로드</p>
-                                <input type="file" id="ogImageUpload" accept="image/*" hidden>
+                                <p class="file-info">지원 형식: JPG, PNG, GIF, WebP, MP4 | 최대 10MB</p>
+                                <input type="file" id="ogImageUpload" accept="image/*,video/mp4" hidden>
                             </div>
                         </div>
                         <div id="ogImagePreview" class="image-preview"></div>

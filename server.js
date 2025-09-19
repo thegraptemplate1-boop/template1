@@ -37,7 +37,14 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // 정적 파일 서빙
 app.use(express.static(__dirname));
-app.use('/uploads', express.static(UPLOAD_DIR));
+
+// 업로드 파일 서빙 (CORS 헤더 추가)
+app.use('/uploads', (req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
+}, express.static(UPLOAD_DIR));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -66,11 +73,11 @@ const upload = multer({
         files: 10
     },
     fileFilter: (req, file, cb) => {
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4'];
         if (allowedTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {
-            cb(new Error('지원하지 않는 파일 형식입니다. JPEG, PNG, WebP, GIF만 허용됩니다.'));
+            cb(new Error('지원하지 않는 파일 형식입니다. JPEG, PNG, WebP, GIF, MP4만 허용됩니다.'));
         }
     }
 });
@@ -101,8 +108,8 @@ async function optimizeImage(inputPath, outputPath, options = {}) {
         // 파일 확장자 확인
         const ext = path.extname(inputPath).toLowerCase();
         
-        // SVG 파일은 그대로 복사
-        if (ext === '.svg') {
+        // SVG 파일이나 비디오 파일은 그대로 복사
+        if (ext === '.svg' || ['.mp4', '.webm', '.ogg', '.mov', '.avi'].includes(ext)) {
             await fs.copy(inputPath, outputPath);
             return true;
         }
@@ -145,8 +152,8 @@ async function createThumbnail(inputPath, outputPath, size = 300) {
         // 파일 확장자 확인
         const ext = path.extname(inputPath).toLowerCase();
         
-        // SVG 파일은 썸네일 생성하지 않음
-        if (ext === '.svg') {
+        // SVG 파일이나 비디오 파일은 썸네일 생성하지 않음
+        if (ext === '.svg' || ['.mp4', '.webm', '.ogg', '.mov', '.avi'].includes(ext)) {
             return false;
         }
         

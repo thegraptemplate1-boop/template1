@@ -269,6 +269,104 @@ body {
     justify-content: center;
 }
 
+/* 업로드 존에 투명 파일 입력을 덮어씌움 */
+.image-upload-zone .file-input-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+}
+
+/* 파일 안내문구 스타일 */
+.file-info {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 0.5rem;
+    text-align: center;
+}
+
+/* 비디오 미리보기 스타일 */
+.video-preview {
+    position: relative;
+    display: inline-block;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.video-thumbnail {
+    width: 200px;
+    height: 150px;
+    object-fit: cover;
+    display: block;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 이미지 아이템 내 비디오 스타일 */
+.image-item .video-thumbnail {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.8rem;
+}
+
+.video-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.video-label {
+    background: rgba(0, 0, 0, 0.7);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.video-placeholder {
+    width: 200px;
+    height: 150px;
+    background: #f5f5f5;
+    border: 2px dashed #ddd;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    border-radius: 8px;
+}
+
+.video-placeholder .video-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.video-placeholder .video-label {
+    background: #e0e0e0;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
 .image-upload-zone:hover {
     border-color: #0201AD;
     background: #f8f9ff;
@@ -647,6 +745,231 @@ body {
 
 .sortable-ghost {
     opacity: 0.4;
+}
+
+/* 아코디언 UI 스타일 */
+.accordion-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.accordion-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+.accordion-item:hover {
+    border-color: #0201AD;
+    box-shadow: 0 4px 16px rgba(2, 1, 173, 0.12);
+    transform: translateY(-2px) translateZ(0);
+}
+
+.accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: #f8f9fa;
+    cursor: pointer;
+    border-bottom: 1px solid #e0e0e0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.accordion-header:hover {
+    background: #f0f0ff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(2, 1, 173, 0.15);
+}
+
+.accordion-header.active {
+    background: #0201AD;
+    color: white;
+}
+
+.accordion-title {
+    font-weight: 600;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.accordion-title::before {
+    content: "▼";
+    margin-right: 0.5rem;
+    font-size: 1rem;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-block;
+}
+
+.accordion-item.collapsed .accordion-title::before {
+    transform: rotate(-90deg);
+}
+
+.accordion-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.accordion-toggle {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #666;
+    position: relative;
+    z-index: 1;
+}
+
+.accordion-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #333;
+    transform: scale(1.1);
+}
+
+.accordion-header.active .accordion-toggle {
+    color: white;
+}
+
+.accordion-toggle::before {
+    content: "";
+}
+
+.accordion-content {
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: top center;
+}
+
+.accordion-item:not(.collapsed) .accordion-content {
+    padding: 1.5rem;
+    max-height: 2000px;
+    opacity: 1;
+    transform: translateY(0);
+    transform-origin: top center;
+}
+
+.accordion-content .form-group {
+    margin-bottom: 1rem;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition-delay: 0.1s;
+}
+
+.accordion-content .form-group:last-child {
+    margin-bottom: 0;
+}
+
+.accordion-item:not(.collapsed) .accordion-content .form-group {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.accordion-item:not(.collapsed) .accordion-content .form-group:nth-child(1) { transition-delay: 0.1s; }
+.accordion-item:not(.collapsed) .accordion-content .form-group:nth-child(2) { transition-delay: 0.15s; }
+.accordion-item:not(.collapsed) .accordion-content .form-group:nth-child(3) { transition-delay: 0.2s; }
+.accordion-item:not(.collapsed) .accordion-content .form-group:nth-child(4) { transition-delay: 0.25s; }
+.accordion-item:not(.collapsed) .accordion-content .form-group:nth-child(5) { transition-delay: 0.3s; }
+
+/* 미디어 아이템 아코디언 - 이모지 제거 */
+.media-accordion .accordion-title::before {
+    content: "▼";
+}
+
+/* 채용 아이템 아코디언 - 이모지 제거 */
+.career-accordion .accordion-title::before {
+    content: "▼";
+}
+
+/* 아코디언 아이템 상태 표시 */
+.accordion-status {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-left: 0.5rem;
+}
+
+.accordion-status.active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.accordion-status.inactive {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* 반응형 아코디언 */
+@media (max-width: 768px) {
+    .accordion-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    .accordion-content {
+        padding: 1rem !important;
+    }
+    
+    .accordion-item:not(.collapsed) .accordion-content {
+        padding: 1rem !important;
+    }
+    
+    .accordion-title {
+        font-size: 0.9rem;
+    }
+    
+    .accordion-actions {
+        gap: 0.25rem;
+    }
+    
+    .accordion-item:hover {
+        transform: translateY(-1px) translateZ(0);
+    }
+}
+
+/* 섹션 토글 스타일 */
+.section-toggle {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.section-toggle label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+}
+
+.section-toggle input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #0201AD;
+    cursor: pointer;
+}
+
+.section-toggle label:hover {
+    color: #0201AD;
 }
 
 .sortable-chosen {

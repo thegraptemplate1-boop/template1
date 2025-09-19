@@ -133,37 +133,12 @@ class AdminCMS {
             // 설정 완료 표시
             earthUploadZone.setAttribute('data-earth-setup', 'true');
             
-            // 강력한 클릭 이벤트 (여러 방식으로 추가)
-            const handleClick = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Earth zone 클릭됨 - 이벤트:', e);
-                console.log('Earth input 요소:', earthInput);
-                
-                try {
-                    earthInput.click();
-                    console.log('Earth input.click() 실행 성공');
-                } catch (error) {
-                    console.error('Earth input.click() 실행 실패:', error);
-                }
-            };
-            
-            // zone 전체에 클릭 이벤트
-            earthUploadZone.addEventListener('click', handleClick, true);
-            
-            // placeholder에도 클릭 이벤트
-            const placeholder = earthUploadZone.querySelector('.upload-placeholder');
-            if (placeholder) {
-                placeholder.addEventListener('click', handleClick, true);
-                console.log('Earth placeholder 클릭 이벤트 추가됨');
-            }
-            
-            // input 변경 이벤트
+            // input 변경 이벤트: FileList + 올바른 dropzone 키 사용
             earthInput.addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    console.log('Earth 배경 이미지 파일 선택됨:', file.name);
-                    this.handleFileUpload(file, 'visionEarthPreview', 'vision.backgroundImage');
+                const files = e.target.files;
+                if (files && files.length) {
+                    console.log('Earth 배경 이미지 파일 선택됨:', files[0].name);
+                    this.handleFileUpload(files, 'vision-earth');
                 }
             });
             
@@ -180,15 +155,16 @@ class AdminCMS {
                 }
             });
             
+            // drop 이벤트: FileList 그대로 전달 + 올바른 dropzone 키
             earthUploadZone.addEventListener('drop', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 earthUploadZone.classList.remove('dragover');
                 
                 const files = e.dataTransfer.files;
-                if (files.length > 0) {
+                if (files && files.length) {
                     console.log('Earth 배경 이미지 드롭됨:', files[0].name);
-                    this.handleFileUpload(files[0], 'visionEarthPreview', 'vision.backgroundImage');
+                    this.handleFileUpload(files, 'vision-earth');
                 }
             });
             
@@ -303,12 +279,22 @@ class AdminCMS {
             if (mediaIntro && this.content.media.richTextIntroHtml) {
                 mediaIntro.innerHTML = this.content.media.richTextIntroHtml;
             }
+            // 섹션 활성/비활성 상태 설정
+            const mediaSectionActive = document.getElementById('mediaSectionActive');
+            if (mediaSectionActive) {
+                mediaSectionActive.checked = this.content.media.active !== false; // 기본값 true
+            }
             this.renderMediaItems();
         }
         
         // Career 섹션
         if (this.content.career) {
             document.getElementById('careerCategories').value = (this.content.career.categories || []).join(', ');
+            // 섹션 활성/비활성 상태 설정
+            const careerSectionActive = document.getElementById('careerSectionActive');
+            if (careerSectionActive) {
+                careerSectionActive.checked = this.content.career.active !== false; // 기본값 true
+            }
             this.renderCareerPosts();
         }
         
@@ -365,11 +351,18 @@ class AdminCMS {
     async handleFileUpload(files, dropzone) {
         if (!files.length) return;
         
-        // 파일 타입 검증
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        // 비전 섹션은 이미지만 허용
+        const isVisionSection = dropzone.startsWith('vision-');
+        const allowedTypes = isVisionSection 
+            ? ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+            : ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'video/mp4'];
+        
         const validFiles = Array.from(files).filter(file => {
             if (!allowedTypes.includes(file.type)) {
-                this.showToast(`${file.name}: 지원하지 않는 파일 형식입니다`, 'error');
+                const errorMsg = isVisionSection 
+                    ? `${file.name}: 비전 섹션은 이미지 파일만 지원합니다 (JPG, PNG, GIF, WebP)`
+                    : `${file.name}: 지원하지 않는 파일 형식입니다`;
+                this.showToast(errorMsg, 'error');
                 return false;
             }
             if (file.size > 10 * 1024 * 1024) { // 10MB 제한
@@ -429,7 +422,7 @@ class AdminCMS {
         } else {
             // 단일 이미지 미리보기
             const previewId = this.getPreviewIdFromDropzone(dropzone);
-            this.renderImagePreview(previewId, url);
+            this.renderImagePreview(previewId, url, dropzone);
         }
         
         // 새로 생성된 업로드 존에 드래그 앤 드롭 설정 적용
@@ -559,12 +552,24 @@ class AdminCMS {
     createImageItem(url) {
         const item = document.createElement('div');
         item.className = 'image-item';
-        item.innerHTML = `
-            <img src="${url}" alt="Uploaded image">
-            <div class="image-actions">
-                <button onclick="this.parentElement.parentElement.remove()" title="삭제">×</button>
-            </div>
-        `;
+        
+        const isVideo = this.isVideoFile(url);
+        
+        if (isVideo) {
+            // 비디오 파일인 경우 (삭제 버튼 없음)
+            item.innerHTML = `
+                <video src="${url}" controls class="video-thumbnail" muted>
+                    <source src="${url}" type="video/mp4">
+                    브라우저가 비디오를 지원하지 않습니다.
+                </video>
+            `;
+        } else {
+            // 이미지 파일인 경우 (삭제 버튼 없음)
+            item.innerHTML = `
+                <img src="${url}" alt="Uploaded image">
+            `;
+        }
+        
         return item;
     }
     
@@ -583,14 +588,156 @@ class AdminCMS {
     }
     
     // 이미지 미리보기 렌더링
-    renderImagePreview(previewId, url) {
+    renderImagePreview(previewId, url, dropzone = null) {
         const preview = document.getElementById(previewId);
         if (!preview || !url) return;
         
-        preview.innerHTML = `
-            <img src="${url}" alt="Preview">
-            <button class="btn btn-sm btn-danger" onclick="this.parentElement.innerHTML=''">삭제</button>
-        `;
+        // 비디오 파일인지 확인
+        const isVideo = this.isVideoFile(url);
+        
+        if (isVideo) {
+            // 비디오 파일인 경우 비디오 태그로 직접 표시 (삭제 버튼 없음)
+            preview.innerHTML = `
+                <video src="${url}" controls class="video-thumbnail" muted>
+                    <source src="${url}" type="video/mp4">
+                    브라우저가 비디오를 지원하지 않습니다.
+                </video>
+            `;
+        } else {
+            // 이미지 미리보기 (삭제 버튼 없음)
+            preview.innerHTML = `
+                <img src="${url}" alt="Preview">
+            `;
+        }
+    }
+    
+    // 비디오 파일인지 확인하는 헬퍼 함수
+    isVideoFile(url) {
+        if (!url) return false;
+        const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi'];
+        const lowerUrl = url.toLowerCase();
+        return videoExtensions.some(ext => lowerUrl.includes(ext));
+    }
+    
+    // 비디오 썸네일 생성
+    createVideoThumbnail(videoUrl, previewElement, isEarthBackground) {
+        console.log('비디오 썸네일 생성 시작:', videoUrl);
+        console.log('미리보기 요소:', previewElement);
+        console.log('Earth 배경 여부:', isEarthBackground);
+        
+        const video = document.createElement('video');
+        video.src = videoUrl;
+        video.muted = true;
+        video.preload = 'metadata';
+        // crossOrigin 제거 - 같은 도메인이므로 불필요
+        
+        // 타임아웃 설정 (20초로 증가)
+        const timeout = setTimeout(() => {
+            console.log('비디오 로딩 타임아웃 (20초)');
+            this.showVideoPlaceholder(previewElement, isEarthBackground);
+        }, 20000);
+        
+        video.onloadstart = () => {
+            console.log('비디오 로딩 시작');
+        };
+        
+        video.onloadedmetadata = () => {
+            console.log('비디오 메타데이터 로드 완료, duration:', video.duration);
+        };
+        
+        video.oncanplay = () => {
+            console.log('비디오 재생 가능 상태');
+            clearTimeout(timeout);
+            
+            try {
+                // 비디오의 첫 번째 프레임으로 이동
+                video.currentTime = 0.1; // 0.1초 지점으로 이동
+                
+                // 비디오의 첫 번째 프레임을 캔버스로 캡처
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // 캔버스 크기 설정 (미리보기 크기에 맞춤)
+                canvas.width = 200;
+                canvas.height = 150;
+                
+                // 비디오의 첫 번째 프레임을 캔버스에 그리기
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // 캔버스를 이미지로 변환
+                const thumbnailUrl = canvas.toDataURL('image/jpeg', 0.8);
+                
+                console.log('비디오 썸네일 생성 성공');
+                
+                // 미리보기 HTML 생성
+                if (isEarthBackground) {
+                    previewElement.innerHTML = `
+                        <div class="video-preview">
+                            <img src="${thumbnailUrl}" alt="Video Thumbnail" class="video-thumbnail">
+                            <div class="video-overlay">
+                                <span class="video-icon">▶️</span>
+                                <span class="video-label">MP4</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    previewElement.innerHTML = `
+                        <div class="video-preview">
+                            <img src="${thumbnailUrl}" alt="Video Thumbnail" class="video-thumbnail">
+                            <div class="video-overlay">
+                                <span class="video-icon">▶️</span>
+                                <span class="video-label">MP4</span>
+                            </div>
+                            <button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.innerHTML=''">삭제</button>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('썸네일 생성 중 오류:', error);
+                this.showVideoPlaceholder(previewElement, isEarthBackground);
+            }
+        };
+        
+        video.onerror = (error) => {
+            console.error('비디오 로딩 실패:', error);
+            console.error('비디오 URL:', videoUrl);
+            console.error('비디오 요소:', video);
+            clearTimeout(timeout);
+            this.showVideoPlaceholder(previewElement, isEarthBackground);
+        };
+        
+        video.onabort = () => {
+            console.log('비디오 로딩 중단');
+            clearTimeout(timeout);
+            this.showVideoPlaceholder(previewElement, isEarthBackground);
+        };
+        
+        // 비디오 로딩 시작
+        video.load();
+    }
+    
+    // 비디오 플레이스홀더 표시
+    showVideoPlaceholder(previewElement, isEarthBackground) {
+        if (isEarthBackground) {
+            previewElement.innerHTML = `
+                <div class="video-preview">
+                    <div class="video-placeholder">
+                        <span class="video-icon">🎥</span>
+                        <span class="video-label">MP4</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            previewElement.innerHTML = `
+                <div class="video-preview">
+                    <div class="video-placeholder">
+                        <span class="video-icon">🎥</span>
+                        <span class="video-label">MP4</span>
+                    </div>
+                    <button class="btn btn-sm btn-danger" onclick="this.parentElement.parentElement.innerHTML=''">삭제</button>
+                </div>
+            `;
+        }
     }
     
     // 히어로 슬라이드 렌더링
@@ -662,11 +809,11 @@ class AdminCMS {
                 <div class="image-upload-zone" data-dropzone="hero-slide-${index}">
                     <div class="upload-placeholder">
                         <p>배경 이미지를 드래그하거나 클릭하여 업로드</p>
-                        <input type="file" accept="image/*" hidden>
+                        <p class="file-info">지원 형식: JPG, PNG, GIF, WebP, MP4 | 최대 10MB</p>
+                        <input type="file" accept="image/*,video/mp4" hidden>
                     </div>
                 </div>
                 <div class="image-preview">
-                    ${slide.background ? `<img src="${slide.background}" alt="Slide ${index + 1}">` : ''}
                 </div>
             </div>
             <div class="form-group">
@@ -689,6 +836,22 @@ class AdminCMS {
             this.handleSlideImageUpload(e.target.files[0], preview);
         });
         
+        // 기존 배경 이미지가 있으면 동적으로 렌더링
+        if (slide.background) {
+            if (this.isVideoFile(slide.background)) {
+                // 비디오 파일인 경우
+                preview.innerHTML = `
+                    <video src="${slide.background}" controls class="video-thumbnail" muted>
+                        <source src="${slide.background}" type="video/mp4">
+                        브라우저가 비디오를 지원하지 않습니다.
+                    </video>
+                `;
+            } else {
+                // 이미지 파일인 경우
+                preview.innerHTML = `<img src="${slide.background}" alt="Slide ${index + 1}">`;
+            }
+        }
+        
         return slideElement;
     }
     
@@ -710,9 +873,22 @@ class AdminCMS {
             const result = await response.json();
             
             if (result.success) {
-                previewElement.innerHTML = `
-                    <img src="${result.url}" alt="Slide image">
-                `;
+                // 파일 타입에 따라 분기 처리
+                const url = result.url;
+                if (this.isVideoFile(url)) {
+                    // 비디오 파일인 경우 비디오 태그로 표시
+                    previewElement.innerHTML = `
+                        <video src="${url}" controls class="video-thumbnail" muted>
+                            <source src="${url}" type="video/mp4">
+                            브라우저가 비디오를 지원하지 않습니다.
+                        </video>
+                    `;
+                } else {
+                    // 이미지 파일인 경우
+                    previewElement.innerHTML = `
+                        <img src="${url}" alt="Slide image">
+                    `;
+                }
                 
                 // 콘텐츠 데이터 자동 업데이트
                 this.updateContentDataFromUI();
@@ -867,11 +1043,11 @@ class AdminCMS {
                 <div class="image-upload-zone" data-dropzone="vision-rolling-${index}">
                     <div class="upload-placeholder">
                         <p>이미지를 드래그하거나 클릭하여 업로드</p>
+                        <p class="file-info">지원 형식: JPG, PNG, GIF, WebP | 최대 10MB</p>
                         <input type="file" accept="image/*" hidden>
                     </div>
                 </div>
                 <div class="image-preview">
-                    ${imageUrl ? `<img src="${imageUrl}" alt="Vision Rolling ${index + 1}">` : ''}
                 </div>
             </div>
         `;
@@ -885,6 +1061,22 @@ class AdminCMS {
         input.addEventListener('change', (e) => {
             this.handleVisionRollingImageUpload(e.target.files[0], preview);
         });
+        
+        // 기존 이미지가 있으면 동적으로 렌더링
+        if (imageUrl) {
+            if (this.isVideoFile(imageUrl)) {
+                // 비디오 파일인 경우 (삭제 버튼 없음)
+                preview.innerHTML = `
+                    <video src="${imageUrl}" controls class="video-thumbnail" muted>
+                        <source src="${imageUrl}" type="video/mp4">
+                        브라우저가 비디오를 지원하지 않습니다.
+                    </video>
+                `;
+            } else {
+                // 이미지 파일인 경우 (삭제 버튼 없음)
+                preview.innerHTML = `<img src="${imageUrl}" alt="Vision Rolling ${index + 1}">`;
+            }
+        }
         
         return itemElement;
     }
@@ -907,10 +1099,22 @@ class AdminCMS {
             const result = await response.json();
             
             if (result.success) {
-                previewElement.innerHTML = `
-                    <img src="${result.url}" alt="Vision Rolling image">
-                    <button class="btn btn-sm btn-danger" onclick="this.parentElement.innerHTML=''">삭제</button>
-                `;
+                // 파일 타입에 따라 분기 처리
+                const url = result.url;
+                if (this.isVideoFile(url)) {
+                    // 비디오 파일인 경우 비디오 태그로 표시 (삭제 버튼 없음)
+                    previewElement.innerHTML = `
+                        <video src="${url}" controls class="video-thumbnail" muted>
+                            <source src="${url}" type="video/mp4">
+                            브라우저가 비디오를 지원하지 않습니다.
+                        </video>
+                    `;
+                } else {
+                    // 이미지 파일인 경우 (삭제 버튼 없음)
+                    previewElement.innerHTML = `
+                        <img src="${url}" alt="Vision Rolling image">
+                    `;
+                }
                 
                 // 콘텐츠 데이터 자동 업데이트
                 this.updateContentDataFromUI();
@@ -1008,7 +1212,8 @@ class AdminCMS {
                 <div class="image-upload-zone" data-dropzone="business-card-${index}">
                     <div class="upload-placeholder">
                         <p>이미지를 드래그하거나 클릭하여 업로드</p>
-                        <input type="file" accept="image/*" hidden>
+                        <p class="file-info">지원 형식: JPG, PNG, GIF, WebP, MP4 | 최대 10MB</p>
+                        <input type="file" accept="image/*,video/mp4" hidden>
                     </div>
                 </div>
                 <div class="image-preview">
@@ -1060,9 +1265,22 @@ class AdminCMS {
             const result = await response.json();
             
             if (result.success) {
-                previewElement.innerHTML = `
-                    <img src="${result.url}" alt="Business Card image">
-                `;
+                // 파일 타입에 따라 분기 처리
+                const url = result.url;
+                if (this.isVideoFile(url)) {
+                    // 비디오 파일인 경우 비디오 태그로 표시
+                    previewElement.innerHTML = `
+                        <video src="${url}" controls class="video-thumbnail" muted>
+                            <source src="${url}" type="video/mp4">
+                            브라우저가 비디오를 지원하지 않습니다.
+                        </video>
+                    `;
+                } else {
+                    // 이미지 파일인 경우
+                    previewElement.innerHTML = `
+                        <img src="${url}" alt="Business Card image">
+                    `;
+                }
                 
                 // 콘텐츠 데이터 자동 업데이트
                 this.updateContentDataFromUI();
@@ -1202,39 +1420,129 @@ class AdminCMS {
         });
     }
     
-    // 미디어 아이템 생성
+    // 미디어 아이템 생성 (아코디언 UI)
     createMediaItem(item, index) {
         const itemElement = document.createElement('div');
-        itemElement.className = 'media-item';
+        itemElement.className = 'accordion-item media-accordion collapsed';
         itemElement.innerHTML = `
-            <div class="item-header">
-                <h4 class="item-title">미디어 아이템 ${index + 1}</h4>
-                <div class="item-actions">
-                    <button class="btn btn-sm btn-danger" onclick="this.closest('.media-item').remove()">삭제</button>
+            <div class="accordion-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                <div class="accordion-title">
+                    미디어 아이템 ${index + 1}
+                </div>
+                <div class="accordion-actions">
+                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); this.closest('.accordion-item').remove()">삭제</button>
+                    <button class="accordion-toggle"></button>
                 </div>
             </div>
-            <div class="form-group">
-                <label>이미지</label>
-                <input type="url" value="${item.image || ''}" placeholder="이미지 URL" onchange="this.dataset.changed='true'">
-            </div>
-            <div class="form-group">
-                <label>카테고리</label>
-                <input type="text" value="${item.category || ''}" placeholder="카테고리" onchange="this.dataset.changed='true'">
-            </div>
-            <div class="form-group">
-                <label>제목</label>
-                <input type="text" value="${item.title || ''}" placeholder="제목" onchange="this.dataset.changed='true'">
-            </div>
-            <div class="form-group">
-                <label>날짜</label>
-                <input type="text" value="${item.date || ''}" placeholder="2025.01.01" onchange="this.dataset.changed='true'">
-            </div>
-            <div class="form-group">
-                <label>순서</label>
-                <input type="number" value="${item.order || index}" placeholder="순서" onchange="this.dataset.changed='true'">
+            <div class="accordion-content">
+                <div class="form-group">
+                    <label>이미지/비디오</label>
+                    <div class="image-upload-zone" data-dropzone="media-item-${index}">
+                        <div class="upload-placeholder">
+                            <p>이미지 또는 비디오를 드래그하거나 클릭하여 업로드</p>
+                            <p class="file-info">지원 형식: JPG, PNG, GIF, WebP, MP4 | 최대 10MB</p>
+                            <input type="file" accept="image/*,video/mp4" hidden>
+                        </div>
+                    </div>
+                    <div class="image-preview">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>카테고리</label>
+                    <input type="text" value="${item.category || ''}" placeholder="카테고리" onchange="this.dataset.changed='true'">
+                </div>
+                <div class="form-group">
+                    <label>제목</label>
+                    <input type="text" value="${item.title || ''}" placeholder="제목" onchange="this.dataset.changed='true'">
+                </div>
+                <div class="form-group">
+                    <label>날짜</label>
+                    <input type="text" value="${item.date || ''}" placeholder="2025.01.01" onchange="this.dataset.changed='true'">
+                </div>
+                <div class="form-group">
+                    <label>순서</label>
+                    <input type="number" value="${item.order || index}" placeholder="순서" onchange="this.dataset.changed='true'">
+                </div>
             </div>
         `;
+        
+        // 이미지 업로드 이벤트 설정
+        const uploadZone = itemElement.querySelector('.image-upload-zone');
+        const input = uploadZone.querySelector('input[type="file"]');
+        const preview = itemElement.querySelector('.image-preview');
+        
+        uploadZone.addEventListener('click', () => input.click());
+        input.addEventListener('change', (e) => {
+            this.handleMediaItemImageUpload(e.target.files[0], preview);
+        });
+        
+        // 기존 이미지가 있으면 동적으로 렌더링
+        if (item.image) {
+            if (this.isVideoFile(item.image)) {
+                // 비디오 파일인 경우
+                preview.innerHTML = `
+                    <video src="${item.image}" controls class="video-thumbnail" muted>
+                        <source src="${item.image}" type="video/mp4">
+                        브라우저가 비디오를 지원하지 않습니다.
+                    </video>
+                `;
+            } else {
+                // 이미지 파일인 경우
+                preview.innerHTML = `<img src="${item.image}" alt="Media Item ${index + 1}">`;
+            }
+        }
+        
         return itemElement;
+    }
+    
+    // 미디어 아이템 이미지 업로드 처리
+    async handleMediaItemImageUpload(file, previewElement) {
+        if (!file) return;
+        
+        try {
+            this.showLoading();
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // 파일 타입에 따라 분기 처리
+                const url = result.url;
+                if (this.isVideoFile(url)) {
+                    // 비디오 파일인 경우 비디오 태그로 표시
+                    previewElement.innerHTML = `
+                        <video src="${url}" controls class="video-thumbnail" muted>
+                            <source src="${url}" type="video/mp4">
+                            브라우저가 비디오를 지원하지 않습니다.
+                        </video>
+                    `;
+                } else {
+                    // 이미지 파일인 경우
+                    previewElement.innerHTML = `
+                        <img src="${url}" alt="Media Item image">
+                    `;
+                }
+                
+                // 콘텐츠 데이터 자동 업데이트
+                this.updateContentDataFromUI();
+                
+                this.showToast('이미지 업로드 성공', 'success');
+            } else {
+                this.showToast('이미지 업로드 실패', 'error');
+            }
+        } catch (error) {
+            console.error('업로드 오류:', error);
+            this.showToast('업로드 중 오류가 발생했습니다', 'error');
+        } finally {
+            this.hideLoading();
+        }
     }
     
     // 채용 공고 렌더링
@@ -1249,45 +1557,46 @@ class AdminCMS {
         });
     }
     
-    // 채용 공고 생성
+    // 채용 공고 생성 (아코디언 UI)
     createCareerPost(post, index) {
         const postElement = document.createElement('div');
-        postElement.className = 'career-item';
+        postElement.className = 'accordion-item career-accordion collapsed';
         postElement.innerHTML = `
-            <div class="item-header">
-                <h4 class="item-title">채용 공고 ${index + 1}</h4>
-                <div class="item-actions">
-                    <label>
-                        <input type="checkbox" ${post.active ? 'checked' : ''} onchange="this.dataset.changed='true'">
-                        활성
-                    </label>
-                    <button class="btn btn-sm btn-danger" onclick="this.closest('.career-item').remove()">삭제</button>
+            <div class="accordion-header" onclick="this.parentElement.classList.toggle('collapsed')">
+                <div class="accordion-title">
+                    채용 공고 ${index + 1}
+                </div>
+                <div class="accordion-actions">
+                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); this.closest('.accordion-item').remove()">삭제</button>
+                    <button class="accordion-toggle"></button>
                 </div>
             </div>
-            <div class="form-group">
-                <label>제목</label>
-                <input type="text" value="${post.title || ''}" placeholder="채용 공고 제목" onchange="this.dataset.changed='true'">
-            </div>
-            <div class="form-group">
-                <label>카테고리</label>
-                <select onchange="this.dataset.changed='true'">
-                    <option value="">카테고리 선택</option>
-                    ${(this.content.career?.categories || []).map(cat => 
-                        `<option value="${cat}" ${post.category === cat ? 'selected' : ''}>${cat}</option>`
-                    ).join('')}
-                </select>
-            </div>
-            <div class="form-group">
-                <label>본문 (HTML 허용)</label>
-                <div class="rich-editor" contenteditable="true" onchange="this.dataset.changed='true'">${post.bodyHtml || ''}</div>
-            </div>
-            <div class="form-group">
-                <label>시작일</label>
-                <input type="date" value="${post.period?.start || ''}" onchange="this.dataset.changed='true'">
-            </div>
-            <div class="form-group">
-                <label>종료일</label>
-                <input type="date" value="${post.period?.end || ''}" onchange="this.dataset.changed='true'">
+            <div class="accordion-content">
+                <div class="form-group">
+                    <label>제목</label>
+                    <input type="text" value="${post.title || ''}" placeholder="채용 공고 제목" onchange="this.dataset.changed='true'">
+                </div>
+                <div class="form-group">
+                    <label>카테고리</label>
+                    <select onchange="this.dataset.changed='true'">
+                        <option value="">카테고리 선택</option>
+                        ${(this.content.career?.categories || []).map(cat => 
+                            `<option value="${cat}" ${post.category === cat ? 'selected' : ''}>${cat}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>본문 (HTML 허용)</label>
+                    <div class="rich-editor" contenteditable="true" onchange="this.dataset.changed='true'">${post.bodyHtml || ''}</div>
+                </div>
+                <div class="form-group">
+                    <label>시작일</label>
+                    <input type="date" value="${post.period?.start || ''}" onchange="this.dataset.changed='true'">
+                </div>
+                <div class="form-group">
+                    <label>종료일</label>
+                    <input type="date" value="${post.period?.end || ''}" onchange="this.dataset.changed='true'">
+                </div>
             </div>
         `;
         return postElement;
@@ -1414,12 +1723,14 @@ class AdminCMS {
         
         // Media 섹션
         content.media = {
+            active: document.getElementById('mediaSectionActive').checked,
             richTextIntroHtml: document.getElementById('mediaIntro').innerHTML,
             items: this.getMediaItems()
         };
         
         // Career 섹션
         content.career = {
+            active: document.getElementById('careerSectionActive').checked,
             categories: document.getElementById('careerCategories').value.split(',').map(s => s.trim()).filter(s => s),
             posts: this.getCareerPosts()
         };
@@ -1460,7 +1771,7 @@ class AdminCMS {
         document.querySelectorAll('#heroSlidesList .slide-item').forEach((slide, index) => {
             const checkbox = slide.querySelector('input[type="checkbox"]');
             const orderInput = slide.querySelector('.order-input');
-            const imagePreview = slide.querySelector('.image-preview img');
+            const mediaPreview = slide.querySelector('.image-preview img, .image-preview video');
             
             // 각 슬라이드의 입력 필드들을 정확하게 선택
             const formGroups = slide.querySelectorAll('.form-group');
@@ -1491,7 +1802,7 @@ class AdminCMS {
                 id: `hero-${index + 1}`,
                 title: titleInput?.value || '',
                 subtitle: subtitleInput?.value || '',
-                background: imagePreview ? imagePreview.src : '',
+                background: mediaPreview ? mediaPreview.src : '',
                 active: checkbox ? checkbox.checked : true,
                 order: orderInput ? parseInt(orderInput.value) || (index + 1) : (index + 1)
             };
@@ -1506,9 +1817,9 @@ class AdminCMS {
     getVisionRollingImages() {
         const images = [];
         document.querySelectorAll('#visionRollingItemsList .media-item').forEach((item) => {
-            const imagePreview = item.querySelector('.image-preview img');
-            if (imagePreview && imagePreview.src) {
-                images.push(imagePreview.src);
+            const mediaPreview = item.querySelector('.image-preview img, .image-preview video');
+            if (mediaPreview && mediaPreview.src) {
+                images.push(mediaPreview.src);
             }
         });
         return images;
@@ -1519,16 +1830,19 @@ class AdminCMS {
         const list = document.getElementById(listId);
         if (!list) return [];
         
-        return Array.from(list.querySelectorAll('.image-item img')).map(img => img.src);
+        return Array.from(list.querySelectorAll('.image-item img, .image-item video')).map(media => media.src);
     }
     
-    // 이미지 미리보기 가져오기
+    // 이미지 미리보기 가져오기 (이미지와 비디오 모두 지원)
     getImagePreview(previewId) {
         const preview = document.getElementById(previewId);
         if (!preview) return '';
         
         const img = preview.querySelector('img');
-        return img ? img.src : '';
+        const video = preview.querySelector('video');
+        
+        // 이미지가 있으면 이미지 src 반환, 없으면 비디오 src 반환
+        return img ? img.src : (video ? video.src : '');
     }
     
     // 비즈니스 카드 데이터 가져오기
@@ -1569,13 +1883,17 @@ class AdminCMS {
     // 미디어 아이템 데이터 가져오기
     getMediaItems() {
         const items = [];
-        document.querySelectorAll('#mediaItemsList .media-item').forEach((item, index) => {
+        document.querySelectorAll('#mediaItemsList .accordion-item').forEach((item, index) => {
             const formGroups = item.querySelectorAll('.form-group');
-            let imageInput = null;
+            let activeInput = null;
             let categoryInput = null;
             let titleInput = null;
             let dateInput = null;
             let orderInput = null;
+            
+            // 이미지 미리보기에서 URL 가져오기
+            const imagePreview = item.querySelector('.image-preview img, .image-preview video');
+            const imageUrl = imagePreview ? imagePreview.src : '';
             
             // 각 입력 필드를 라벨로 정확하게 찾기
             formGroups.forEach((group) => {
@@ -1584,8 +1902,8 @@ class AdminCMS {
                 
                 if (input && label) {
                     const labelText = label.textContent;
-                    if (labelText.includes('이미지')) {
-                        imageInput = input;
+                    if (labelText.includes('활성화')) {
+                        activeInput = input;
                     } else if (labelText.includes('카테고리')) {
                         categoryInput = input;
                     } else if (labelText.includes('제목')) {
@@ -1600,7 +1918,7 @@ class AdminCMS {
             
             items.push({
                 id: `media-${index + 1}`,
-                image: imageInput?.value || '',
+                image: imageUrl,
                 category: categoryInput?.value || '',
                 title: titleInput?.value || '',
                 date: dateInput?.value || '',
@@ -1613,11 +1931,11 @@ class AdminCMS {
     // 채용 공고 데이터 가져오기
     getCareerPosts() {
         const posts = [];
-        document.querySelectorAll('#careerPostsList .career-item').forEach((post, index) => {
+        document.querySelectorAll('#careerPostsList .accordion-item').forEach((post, index) => {
             const editor = post.querySelector('.rich-editor');
-            const checkbox = post.querySelector('input[type="checkbox"]');
             
             const formGroups = post.querySelectorAll('.form-group');
+            let activeInput = null;
             let titleInput = null;
             let categorySelect = null;
             let startDateInput = null;
@@ -1631,7 +1949,9 @@ class AdminCMS {
                 
                 if (label) {
                     const labelText = label.textContent;
-                    if (labelText.includes('제목') && input) {
+                    if (labelText.includes('활성화') && input) {
+                        activeInput = input;
+                    } else if (labelText.includes('제목') && input) {
                         titleInput = input;
                     } else if (labelText.includes('카테고리') && select) {
                         categorySelect = select;
@@ -1651,8 +1971,7 @@ class AdminCMS {
                 period: {
                     start: startDateInput?.value || '',
                     end: endDateInput?.value || ''
-                },
-                active: checkbox ? checkbox.checked : false
+                }
             });
         });
         return posts;

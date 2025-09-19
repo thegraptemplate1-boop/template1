@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="./font/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.2/packages/wanted-sans/documentation/webfonts/wanted-sans.css">
+  <link href="https://fonts.googleapis.com/css2?family=Fahkwang:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* 채용 페이지 전용 스타일 */
     .career-hero {
@@ -425,6 +426,185 @@
         padding: 30px 20px;
       }
     }
+
+    /* 페이지네이션 스타일 */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 3rem;
+      padding: 2rem 0;
+    }
+
+    .pagination-btn {
+      background: white;
+      border: 1px solid #e0e0e0;
+      color: #333;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+      min-width: 40px;
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+      background: #0201AD;
+      color: white;
+      border-color: #0201AD;
+    }
+
+    .pagination-btn.active {
+      background: #0201AD;
+      color: white;
+      border-color: #0201AD;
+    }
+
+    .pagination-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* 모달 스타일 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 2rem;
+    }
+
+    .modal-content {
+      background: white;
+      border-radius: 16px;
+      max-width: 800px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1001;
+      transition: background 0.3s ease;
+    }
+
+    .modal-close:hover {
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .modal-info {
+      padding: 2rem;
+    }
+
+    .modal-category {
+      background: #0201AD;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: inline-block;
+      margin-bottom: 1rem;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #191919;
+      margin-bottom: 1rem;
+      line-height: 1.4;
+    }
+
+    .modal-date {
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-description {
+      color: #555;
+      line-height: 1.6;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .modal-actions {
+      text-align: center;
+    }
+
+    .modal-apply-btn {
+      background: #0201AD;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .modal-apply-btn:hover:not(:disabled) {
+      background: #0087AD;
+    }
+
+    .modal-apply-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    /* 반응형 모달 */
+    @media (max-width: 768px) {
+      .modal-overlay {
+        padding: 1rem;
+      }
+
+      .modal-content {
+        max-height: 95vh;
+      }
+
+      .modal-info {
+        padding: 1.5rem;
+      }
+
+      .modal-title {
+        font-size: 1.2rem;
+      }
+
+      .pagination {
+        margin-top: 2rem;
+        padding: 1rem 0;
+      }
+
+      .pagination-btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+        min-width: 35px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -730,8 +910,114 @@
 
   <script src="./script.js"></script>
   <script>
-    // 채용 공고 필터 기능
-    document.addEventListener('DOMContentLoaded', function() {
+    // 콘텐츠 데이터를 저장할 전역 변수
+    let contentData = null;
+
+    // 콘텐츠 로드 함수
+    async function loadContent() {
+      try {
+        const response = await fetch('/content.json');
+        if (!response.ok) {
+          throw new Error('콘텐츠를 불러올 수 없습니다');
+        }
+        contentData = await response.json();
+        console.log('채용 페이지 콘텐츠 로드 완료:', contentData);
+        
+        // 채용 섹션 업데이트
+        updateCareerSection(contentData.career);
+      } catch (error) {
+        console.error('콘텐츠 로드 오류:', error);
+      }
+    }
+
+    // 채용 섹션 업데이트
+    function updateCareerSection(careerData) {
+      if (!careerData?.posts) return;
+      
+      const jobGrid = document.querySelector('.job-grid');
+      if (!jobGrid) return;
+
+      // 기존 정적 카드들 제거
+      jobGrid.innerHTML = '';
+
+      // 모든 채용 포스트를 표시 (활성화 여부와 관계없이)
+      careerData.posts.forEach((post, index) => {
+        const jobCard = createJobCard(post, index);
+        jobGrid.appendChild(jobCard);
+      });
+
+      // 필터 버튼 이벤트 재설정
+      setupFilterButtons();
+    }
+
+    // 채용 카드 생성
+    function createJobCard(post, index) {
+      const card = document.createElement('div');
+      card.className = 'job-card';
+      card.setAttribute('data-category', post.category || 'all');
+      
+      const isActive = post.active;
+      const statusText = isActive ? '채용 중' : '마감';
+      const statusClass = isActive ? 'job-status' : 'job-status job-status-closed';
+      
+      card.innerHTML = `
+        <div class="job-header">
+          <div class="${statusClass}">${statusText}</div>
+        </div>
+        <h3 class="job-title">${post.title || '채용 공고'}</h3>
+        <div class="job-department">${post.category || '전체'}</div>
+        <div class="job-description">
+          ${post.bodyHtml || '<p>상세 내용을 확인해주세요.</p>'}
+        </div>
+        <div class="job-meta">
+          <span class="job-period">${formatPeriod(post.period)}</span>
+        </div>
+        <button class="job-apply-btn" ${!isActive ? 'disabled' : ''}>
+          ${isActive ? '지원하기' : '마감'}
+        </button>
+      `;
+      
+      return card;
+    }
+
+    // 기간 포맷팅
+    function formatPeriod(period) {
+      if (!period || (!period.start && !period.end)) {
+        return '상시 채용';
+      }
+      
+      const start = period.start ? formatDate(period.start) : '';
+      const end = period.end ? formatDate(period.end) : '';
+      
+      if (start && end) {
+        return `${start} ~ ${end}`;
+      } else if (start) {
+        return `${start} ~`;
+      } else if (end) {
+        return `~ ${end}`;
+      }
+      
+      return '상시 채용';
+    }
+
+    // 날짜 포맷팅
+    function formatDate(dateString) {
+      if (!dateString) return '';
+      
+      try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('ko-KR', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).replace(/\./g, '.').replace(/\s/g, '');
+      } catch (error) {
+        return dateString;
+      }
+    }
+
+    // 필터 버튼 설정
+    function setupFilterButtons() {
       const filterBtns = document.querySelectorAll('.filter-btn');
       const jobCards = document.querySelectorAll('.job-card');
 
@@ -753,8 +1039,10 @@
           });
         });
       });
+    }
 
-      // 지원하기 버튼 클릭 이벤트
+    // 지원하기 버튼 이벤트 설정
+    function setupApplyButtons() {
       const applyBtns = document.querySelectorAll('.job-apply-btn');
       applyBtns.forEach(btn => {
         btn.addEventListener('click', function() {
@@ -764,6 +1052,238 @@
           }
         });
       });
+    }
+
+    // 페이지네이션 변수
+    let currentPage = 1;
+    const itemsPerPage = 6;
+    let filteredPosts = [];
+
+    // 페이지 표시
+    function displayPage(page) {
+      const jobGrid = document.querySelector('.job-grid');
+      const startIndex = (page - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const pageItems = filteredPosts.slice(startIndex, endIndex);
+      
+      jobGrid.innerHTML = '';
+      
+      pageItems.forEach((post, index) => {
+        const jobCard = createJobCard(post, startIndex + index);
+        jobGrid.appendChild(jobCard);
+      });
+      
+      // 페이지네이션 업데이트
+      updatePagination();
+    }
+
+    // 페이지네이션 업데이트
+    function updatePagination() {
+      const totalPages = Math.ceil(filteredPosts.length / itemsPerPage);
+      const paginationContainer = document.querySelector('.pagination');
+      
+      if (!paginationContainer) {
+        // 페이지네이션 컨테이너 생성
+        const container = document.querySelector('.career-container');
+        const pagination = document.createElement('div');
+        pagination.className = 'pagination';
+        container.appendChild(pagination);
+      }
+      
+      const pagination = document.querySelector('.pagination');
+      pagination.innerHTML = '';
+      
+      if (totalPages <= 1) return;
+      
+      // 이전 버튼
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'pagination-btn';
+      prevBtn.innerHTML = '←';
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.onclick = () => {
+        if (currentPage > 1) {
+          currentPage--;
+          displayPage(currentPage);
+        }
+      };
+      pagination.appendChild(prevBtn);
+      
+      // 페이지 번호
+      for (let i = 1; i <= totalPages; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
+        pageBtn.textContent = i;
+        pageBtn.onclick = () => {
+          currentPage = i;
+          displayPage(currentPage);
+        };
+        pagination.appendChild(pageBtn);
+      }
+      
+      // 다음 버튼
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'pagination-btn';
+      nextBtn.innerHTML = '→';
+      nextBtn.disabled = currentPage === totalPages;
+      nextBtn.onclick = () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          displayPage(currentPage);
+        }
+      };
+      pagination.appendChild(nextBtn);
+    }
+
+    // 모달 열기
+    function openModal(index) {
+      const post = filteredPosts[index];
+      if (!post) return;
+      
+      // 현재 스크롤 위치 저장
+      const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+      
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <button class="modal-close">&times;</button>
+          <div class="modal-info">
+            <div class="modal-category">${post.category || '전체'}</div>
+            <h2 class="modal-title">${post.title || '채용 공고'}</h2>
+            <div class="modal-date">${formatPeriod(post.period)}</div>
+            <div class="modal-description">
+              ${post.bodyHtml || '<p>상세 내용을 확인해주세요.</p>'}
+            </div>
+            <div class="modal-actions">
+              <button class="modal-apply-btn" ${!post.active ? 'disabled' : ''}>
+                ${post.active ? '지원하기' : '마감'}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // body 스크롤 방지
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollPosition}px`;
+      document.body.style.width = '100%';
+      
+      document.body.appendChild(modal);
+      
+      // 모달 닫기 이벤트
+      const closeModal = () => {
+        document.body.removeChild(modal);
+        // 스크롤 복원
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, scrollPosition);
+      };
+      
+      modal.querySelector('.modal-close').onclick = closeModal;
+      
+      modal.onclick = (e) => {
+        if (e.target === modal) {
+          closeModal();
+        }
+      };
+      
+      // ESC 키로 닫기
+      const handleEsc = (e) => {
+        if (e.key === 'Escape') {
+          closeModal();
+          document.removeEventListener('keydown', handleEsc);
+        }
+      };
+      document.addEventListener('keydown', handleEsc);
+    }
+
+    // 채용 섹션 업데이트 (수정)
+    function updateCareerSection(careerData) {
+      if (!careerData?.posts) return;
+      
+      const jobGrid = document.querySelector('.job-grid');
+      if (!jobGrid) return;
+
+      // 기존 정적 카드들 제거
+      jobGrid.innerHTML = '';
+
+      // 모든 채용 포스트를 표시 (활성화 여부와 관계없이)
+      filteredPosts = careerData.posts;
+      
+      // 페이지네이션 적용
+      displayPage(1);
+
+      // 필터 버튼 이벤트 재설정
+      setupFilterButtons();
+    }
+
+    // 채용 카드 생성 (수정)
+    function createJobCard(post, index) {
+      const card = document.createElement('div');
+      card.className = 'job-card';
+      card.setAttribute('data-category', post.category || 'all');
+      
+      const isActive = post.active;
+      const statusText = isActive ? '채용 중' : '마감';
+      const statusClass = isActive ? 'job-status' : 'job-status job-status-closed';
+      
+      card.innerHTML = `
+        <div class="job-header">
+          <div class="${statusClass}">${statusText}</div>
+        </div>
+        <h3 class="job-title">${post.title || '채용 공고'}</h3>
+        <div class="job-department">${post.category || '전체'}</div>
+        <div class="job-description">
+          ${post.bodyHtml || '<p>상세 내용을 확인해주세요.</p>'}
+        </div>
+        <div class="job-meta">
+          <span class="job-period">${formatPeriod(post.period)}</span>
+        </div>
+        <button class="job-apply-btn" ${!isActive ? 'disabled' : ''} onclick="openModal(${index})">
+          ${isActive ? '자세히 보기' : '마감'}
+        </button>
+      `;
+      
+      return card;
+    }
+
+    // 필터 버튼 설정 (수정)
+    function setupFilterButtons() {
+      const filterBtns = document.querySelectorAll('.filter-btn');
+      
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          // 활성 버튼 변경
+          filterBtns.forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+
+          const filter = this.getAttribute('data-filter');
+          
+          // 필터링
+          if (filter === 'all') {
+            filteredPosts = contentData.career.posts;
+          } else {
+            filteredPosts = contentData.career.posts.filter(post => 
+              post.category && post.category.toLowerCase().includes(filter)
+            );
+          }
+          
+          // 첫 페이지로 이동
+          currentPage = 1;
+          displayPage(1);
+        });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // 콘텐츠 로드
+      loadContent();
+      
+      // 지원하기 버튼 이벤트 설정
+      setupApplyButtons();
     });
   </script>
 </body>

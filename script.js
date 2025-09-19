@@ -174,7 +174,7 @@ window.addEventListener('scroll', function() {
 
 // Hero image slider
 document.addEventListener('DOMContentLoaded', function() {
-  const images = document.querySelectorAll('.hero-bg-image');
+  let images = Array.from(document.querySelectorAll('.hero-bg-image')); // ← let으로
   const dots = document.querySelectorAll('.pagination-dots .dot');
   let currentSlide = 0;
   let isTransitioning = false;
@@ -247,11 +247,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 2단계: 이미지 전환
     setTimeout(() => {
-      // 현재 활성 이미지 비활성화
+      // 현재 활성 이미지/비디오 비활성화
       if (images[currentSlide]) {
         images[currentSlide].classList.remove('active');
         images[currentSlide].style.opacity = '0';
         images[currentSlide].style.visibility = 'hidden';
+        
+        // 비디오인 경우 일시정지
+        if (images[currentSlide].tagName === 'VIDEO') {
+          images[currentSlide].pause();
+        }
       }
       if (dots[currentSlide]) {
         dots[currentSlide].classList.remove('active');
@@ -268,11 +273,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
       
-      // 새로운 이미지 활성화
+      // 새로운 이미지/비디오 활성화
       if (images[index]) {
         images[index].classList.add('active');
         images[index].style.opacity = '1';
         images[index].style.visibility = 'visible';
+        
+        // 비디오인 경우 재생 시작
+        if (images[index].tagName === 'VIDEO') {
+          const video = images[index];
+          video.currentTime = 0; // 처음부터 재생
+          video.play().catch(error => {
+            console.log('비디오 자동 재생 실패 (정상):', error);
+          });
+        }
       }
       if (dots[index]) {
         dots[index].classList.add('active');
@@ -356,6 +370,28 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
+  // 현재 슬라이드의 미디어 타입 확인
+  function getCurrentSlideMediaType() {
+    if (images[currentSlide]) {
+      return images[currentSlide].tagName === 'VIDEO' ? 'video' : 'image';
+    }
+    return 'image';
+  }
+  
+  // 현재 슬라이드의 전환 시간 계산
+  function getCurrentSlideDuration() {
+    const mediaType = getCurrentSlideMediaType();
+    
+    if (mediaType === 'video' && images[currentSlide]) {
+      const video = images[currentSlide];
+      // 비디오 재생 시간이 있으면 그 시간을 사용, 없으면 기본 8초
+      return video.duration ? Math.max(video.duration * 1000, 3000) : 8000;
+    }
+    
+    // 이미지의 경우 기본 4초
+    return 4000;
+  }
+  
   // 자동 슬라이드 함수 (프로그레스 바 완료 시점에만 전환)
   function startAutoSlide() {
     // 프로그레스 바가 완료되면 자동으로 다음 슬라이드로 전환
@@ -363,7 +399,7 @@ document.addEventListener('DOMContentLoaded', function() {
     return setInterval(() => {
       // 이 함수는 더 이상 직접 슬라이드를 전환하지 않음
       // 프로그레스 바 완료 시점에 showSlide가 호출됨
-    }, 4000);
+    }, getCurrentSlideDuration());
   }
   
   // 자동 슬라이드 시작
@@ -421,7 +457,9 @@ document.addEventListener('DOMContentLoaded', function() {
       progressCircle.style.strokeDashoffset = circumference;
     }
     
-    // 4초 동안 프로그레스 바 애니메이션 (더 부드럽게)
+    // 현재 슬라이드의 전환 시간에 맞춰 프로그레스 바 애니메이션
+    const slideDuration = getCurrentSlideDuration();
+    const totalSteps = slideDuration / 50; // 50ms 간격으로 계산
     let progress = resumeFromSaved ? savedProgress : 0;
     const startProgress = progress;
     
@@ -432,12 +470,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
       
-      progress += 0.5; // 0.5씩 증가하여 더 부드럽게
+      progress += 100 / totalSteps; // 동적 시간에 맞춰 진행률 계산
       savedProgress = progress; // 현재 진행률 저장
-      const offset = circumference - (progress / 40) * circumference;
+      const offset = circumference - (progress / 100) * circumference;
       progressCircle.style.strokeDashoffset = offset;
       
-      if (progress >= 40) {
+      if (progress >= 100) {
         clearInterval(currentProgressInterval);
         currentProgressInterval = null;
         savedProgress = 0; // 완료 시 저장된 진행률 리셋
@@ -474,6 +512,40 @@ document.addEventListener('DOMContentLoaded', function() {
       startProgressAnimation(true); // 저장된 진행률부터 재개
     }
   }
+
+  // 새로 추가: 미디어 갱신 시 슬라이더 리셋
+  function refreshHeroMedia() {
+    images = Array.from(document.querySelectorAll('.hero-bg-image'));
+    currentSlide = 0;
+
+    // 모든 미디어 기본상태로, 첫 슬라이드만 표시
+    images.forEach((el,i)=>{
+      el.classList.toggle('active', i===0);
+      el.style.opacity    = (i===0)?'1':'0';
+      el.style.visibility = (i===0)?'visible':'hidden';
+      if (i===0 && el.tagName==='VIDEO') {
+        el.currentTime = 0;
+        el.play().catch(()=>{});
+      } else if (el.tagName==='VIDEO') {
+        el.pause();
+      }
+    });
+
+    // 도트/프로그레스 리셋
+    dots.forEach((d,i)=> d.classList.toggle('active', i===0 && i<images.length));
+    if (autoSlideInterval) clearInterval(autoSlideInterval);
+    if (currentProgressInterval) { clearInterval(currentProgressInterval); currentProgressInterval = null; savedProgress = 0; }
+    // 자동 슬라이드/프로그레스 다시 시작
+    autoSlideInterval = startAutoSlide();
+    isPlaying = true;
+    startProgressAnimation(false);
+  }
+
+  // 커스텀 이벤트 연결
+  document.addEventListener('HERO_MEDIA_UPDATED', refreshHeroMedia);
+
+  // 초기 1회 실행(정적 콘텐츠만 있을 때도 동작)
+  refreshHeroMedia();
 });
 
 // Rolling Images 자동 전환 및 스크롤 애니메이션
@@ -1325,6 +1397,7 @@ window.addEventListener('load', function() {
       contentData = await response.json();
       window.contentData = contentData; // 전역 변수로 저장
       console.log('콘텐츠 로드 완료:', contentData);
+      console.log('채용 데이터:', contentData.career);
       
       // 이미지 URL 테스트
       if (contentData.hero && contentData.hero.slides && contentData.hero.slides[0]) {
@@ -1371,10 +1444,35 @@ window.addEventListener('load', function() {
     // Footer 섹션 업데이트
     updateFooterSection(content.footer);
     
-    // SEO 메타데이터 업데이트
-    updateSEOMeta(content.seo);
-  }
+      // SEO 메타데이터 업데이트
+      updateSEOMeta(content.seo);
+      
+      // GNB 메뉴 활성/비활성 상태 업데이트
+      updateGNBMenu(content);
+    }
   
+  // GNB 메뉴 활성/비활성 상태 업데이트
+  function updateGNBMenu(content) {
+    // 미디어 메뉴 제어
+    const mediaMenuLink = document.querySelector('a[href="media.html"]');
+    if (mediaMenuLink) {
+      const isMediaActive = content.media?.active !== false; // 기본값 true
+      mediaMenuLink.style.display = isMediaActive ? 'block' : 'none';
+    }
+    
+    // 채용 메뉴 제어
+    const careerMenuLink = document.querySelector('a[href="career.html"]');
+    if (careerMenuLink) {
+      const isCareerActive = content.career?.active !== false; // 기본값 true
+      careerMenuLink.style.display = isCareerActive ? 'block' : 'none';
+    }
+    
+    console.log('GNB 메뉴 상태 업데이트:', {
+      media: content.media?.active !== false,
+      career: content.career?.active !== false
+    });
+  }
+
   // URL을 절대 경로로 변환하는 헬퍼 함수
   function convertToAbsoluteUrl(url) {
     if (!url) return url;
@@ -1393,98 +1491,114 @@ window.addEventListener('load', function() {
     return window.location.origin + '/' + url.replace(/^\.\//, '');
   }
   
+  // 파일이 비디오인지 확인하는 헬퍼 함수
+  function isVideoFile(url) {
+    if (!url) return false;
+    const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi'];
+    const lowerUrl = url.toLowerCase();
+    const isVideo = videoExtensions.some(ext => lowerUrl.includes(ext));
+    console.log('비디오 파일 확인:', url, '→', isVideo);
+    return isVideo;
+  }
+  
+  // 미디어 요소 생성 헬퍼 함수 (이미지 또는 비디오)
+  function createMediaElement(url, alt = '', className = '') {
+    const absoluteUrl = convertToAbsoluteUrl(url);
+    console.log('미디어 요소 생성:', absoluteUrl, 'alt:', alt, 'className:', className);
+    
+    if (isVideoFile(absoluteUrl)) {
+      console.log('비디오 요소 생성 중...');
+      const video = document.createElement('video');
+      video.src = absoluteUrl;
+      video.alt = alt;
+      video.className = className;
+      video.muted = true;
+      video.loop = true;
+      video.autoplay = true;
+      video.playsInline = true;
+      video.preload = 'metadata';
+      // crossOrigin 제거 - 같은 도메인이므로 불필요
+      video.style.width = '100%';
+      video.style.height = '100%';
+      video.style.objectFit = 'cover';
+      video.style.display = 'block';
+      
+      // 비디오 로딩 완료 로그
+      video.onloadeddata = () => {
+        console.log('비디오 로딩 완료:', absoluteUrl);
+      };
+      
+      video.onerror = (error) => {
+        console.error('비디오 로딩 실패:', absoluteUrl, error);
+      };
+      
+      return video;
+    } else {
+      console.log('이미지 요소 생성 중...');
+      const img = document.createElement('img');
+      img.src = absoluteUrl;
+      img.alt = alt;
+      img.className = className;
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'cover';
+      img.style.display = 'block';
+      
+      img.onload = () => {
+        console.log('이미지 로딩 완료:', absoluteUrl);
+      };
+      
+      img.onerror = () => {
+        console.error('이미지 로딩 실패:', absoluteUrl);
+      };
+      
+      return img;
+    }
+  }
+  
   // Hero 섹션 업데이트
   function updateHeroSection(heroData) {
     if (!heroData?.slides) return;
-    
+
     const heroBackground = document.querySelector('.hero-background');
+    const overlay = heroBackground.querySelector('.hero-overlay');
     const heroTitle = document.querySelector('.hero-title .text-content');
     const heroSubtitle = document.querySelector('.hero-subtitle .text-content');
-    const paginationDots = document.querySelectorAll('.pagination-dots .dot');
-    
-    if (!heroBackground || !heroTitle || !heroSubtitle) return;
-    
-    // 활성 슬라이드만 필터링
-    const activeSlides = heroData.slides.filter(slide => slide.active);
-    
-    // 배경 이미지 업데이트
-    const bgImages = heroBackground.querySelectorAll('.hero-bg-image');
-    console.log('히어로 배경 이미지 요소들:', bgImages);
-    console.log('활성 슬라이드들:', activeSlides);
-    
-    bgImages.forEach((img, index) => {
-      if (activeSlides[index]) {
-        const imageUrl = convertToAbsoluteUrl(activeSlides[index].background);
-        console.log(`히어로 이미지 ${index + 1} URL:`, imageUrl);
-        
-        // 기존 src 제거 후 새로 설정
-        img.src = '';
-        img.src = imageUrl;
-        img.alt = `AEROGRID Hero Background ${index + 1}`;
-        
-        // 모든 이미지를 로드하되 첫 번째만 표시
-        img.style.display = 'block';
-        img.style.opacity = index === 0 ? '1' : '0';
-        img.style.visibility = index === 0 ? 'visible' : 'hidden';
-        
-        if (index === 0) {
-          img.classList.add('active');
-        } else {
-          img.classList.remove('active');
+    const dots = document.querySelectorAll('.pagination-dots .dot');
+
+    // 1) 기존 미디어 싹 제거 (오버레이 제외)
+    heroBackground.querySelectorAll('.hero-bg-image').forEach(el => el.remove());
+
+    // 2) 활성 슬라이드만 재생성
+    const activeSlides = heroData.slides.filter(s => s.active).slice(0, 5);
+    const frag = document.createDocumentFragment();
+
+    activeSlides.forEach((s, i) => {
+        const url = convertToAbsoluteUrl(s.background);
+        const el = createMediaElement(url, `AEROGRID Hero Background ${i+1}`, 'hero-bg-image');
+        el.style.opacity   = (i === 0) ? '1' : '0';
+        el.style.visibility= (i === 0) ? 'visible' : 'hidden';
+        if (el.tagName === 'VIDEO') {
+            el.addEventListener('loadedmetadata', () => { if (i === 0) el.play().catch(()=>{}); });
         }
-        
-        // 이미지 로드 이벤트 추가
-        img.onload = () => {
-          console.log(`히어로 이미지 ${index + 1} 로드 성공:`, imageUrl);
-          // 로드 성공 후 첫 번째 이미지만 표시
-          if (index === 0) {
-            img.style.opacity = '1';
-            img.style.visibility = 'visible';
-          } else {
-            img.style.opacity = '0';
-            img.style.visibility = 'hidden';
-          }
-        };
-        img.onerror = () => {
-          console.error(`히어로 이미지 ${index + 1} 로드 실패:`, imageUrl);
-        };
-      } else {
-        img.style.display = 'none';
-        img.classList.remove('active');
-      }
+        frag.appendChild(el);
     });
-    
-    // 첫 번째 슬라이드의 텍스트만 설정 (애니메이션 구조 포함)
+
+    // 오버레이 위계 보존을 위해 오버레이 앞에 삽입
+    heroBackground.insertBefore(frag, overlay);
+
+    // 3) 텍스트/도트 세팅(기존 로직 유지)
     if (activeSlides[0]) {
-      const titleText = activeSlides[0].title || '하늘을 설계하다';
-      const subtitleText = activeSlides[0].subtitle || '산업용 자율비행 드론부터 관제·AI 비전까지';
-      
-      // 타이틀 텍스트를 애니메이션 구조로 생성
-      if (titleText.includes('<br>')) {
-        const lines = titleText.split('<br>');
-        const titleContent = heroTitle.querySelector('.text-content');
-        if (titleContent) {
-          titleContent.innerHTML = lines.map((line, i) => 
-            `<div class="title-line" data-line="${i}"><span class="line-text">${line.trim()}</span></div>`
-          ).join('');
-        }
-      } else {
-        heroTitle.innerHTML = `<span class="text-content"><div class="title-line" data-line="0"><span class="line-text">${titleText}</span></div></span>`;
-      }
-      
-      // 서브타이틀은 단순하게 설정
-      heroSubtitle.innerHTML = `<span class="text-content">${subtitleText}</span>`;
+        heroTitle.innerHTML = activeSlides[0].title?.includes('<br>')
+            ? activeSlides[0].title.split('<br>').map((t,i)=>`<div class="title-line" data-line="${i}"><span class="line-text">${t.trim()}</span></div>`).join('')
+            : `<div class="title-line" data-line="0"><span class="line-text">${activeSlides[0].title || '하늘을 설계하다'}</span></div>`;
+        heroSubtitle.innerHTML = activeSlides[0].subtitle
+            ? activeSlides[0].subtitle : '산업용 자율비행 드론부터 관제·AI 비전까지';
     }
-    
-    // 페이지네이션 도트 업데이트
-    paginationDots.forEach((dot, index) => {
-      if (index < activeSlides.length) {
-        dot.style.display = 'block';
-        dot.classList.toggle('active', index === 0);
-      } else {
-        dot.style.display = 'none';
-      }
-    });
+    dots.forEach((d,i)=> { d.style.display = (i < activeSlides.length) ? 'block' : 'none'; d.classList.toggle('active', i===0); });
+
+    // 4) 슬라이더에게 "미디어가 갱신됐다" 알리기
+    document.dispatchEvent(new Event('HERO_MEDIA_UPDATED'));
   }
   
   // Vision 섹션 업데이트
@@ -1509,21 +1623,50 @@ window.addEventListener('load', function() {
     
     // Earth 배경 이미지 업데이트
     if (earthImage && visionData.backgroundImage) {
-      const imageUrl = convertToAbsoluteUrl(visionData.backgroundImage);
-      console.log('비전 Earth 배경 이미지 URL:', imageUrl);
+      const mediaUrl = convertToAbsoluteUrl(visionData.backgroundImage);
+      console.log('비전 Earth 배경 미디어 URL:', mediaUrl);
       
-      // 기존 src 제거 후 새로 설정
-      earthImage.src = '';
-      earthImage.src = imageUrl;
+      const isVideo = isVideoFile(mediaUrl);
+      const currentIsVideo = earthImage.tagName === 'VIDEO';
       
-      earthImage.onload = () => {
-        console.log('비전 Earth 배경 이미지 로드 성공:', imageUrl);
-        earthImage.style.opacity = '1';
-        earthImage.style.visibility = 'visible';
-      };
-      earthImage.onerror = () => {
-        console.error('비전 Earth 배경 이미지 로드 실패:', imageUrl);
-      };
+      // 미디어 타입이 다르면 요소를 교체
+      if (isVideo !== currentIsVideo) {
+        // 기존 요소 제거
+        earthImage.remove();
+        
+        // 새로운 미디어 요소 생성
+        const newMediaElement = createMediaElement(mediaUrl, 'Earth Background', 'earth-image');
+        
+        // Earth 이미지 컨테이너에 추가
+        const earthContainer = document.querySelector('.earth-container');
+        if (earthContainer) {
+          earthContainer.appendChild(newMediaElement);
+        }
+      } else {
+        // 같은 타입이면 src만 업데이트
+        earthImage.src = '';
+        earthImage.src = mediaUrl;
+        
+        if (earthImage.tagName === 'IMG') {
+          earthImage.onload = () => {
+            console.log('비전 Earth 배경 이미지 로드 성공:', mediaUrl);
+            earthImage.style.opacity = '1';
+            earthImage.style.visibility = 'visible';
+          };
+          earthImage.onerror = () => {
+            console.error('비전 Earth 배경 이미지 로드 실패:', mediaUrl);
+          };
+        } else if (earthImage.tagName === 'VIDEO') {
+          earthImage.onloadeddata = () => {
+            console.log('비전 Earth 배경 비디오 로드 성공:', mediaUrl);
+            earthImage.style.opacity = '1';
+            earthImage.style.visibility = 'visible';
+          };
+          earthImage.onerror = () => {
+            console.error('비전 Earth 배경 비디오 로드 실패:', mediaUrl);
+          };
+        }
+      }
     }
     
     // 롤링 이미지 업데이트
@@ -1531,39 +1674,60 @@ window.addEventListener('load', function() {
       console.log('비전 롤링 이미지들:', visionData.rollingImages);
       console.log('비전 카드 이미지 요소들:', cardImages);
       
-      cardImages.forEach((img, index) => {
+      cardImages.forEach((mediaElement, index) => {
         if (visionData.rollingImages[index]) {
-          const imageUrl = convertToAbsoluteUrl(visionData.rollingImages[index]);
-          console.log(`비전 롤링 이미지 ${index + 1} URL:`, imageUrl);
+          const mediaUrl = convertToAbsoluteUrl(visionData.rollingImages[index]);
+          console.log(`비전 롤링 미디어 ${index + 1} URL:`, mediaUrl);
           
-          // 기존 src 제거 후 새로 설정
-          img.src = '';
-          img.src = imageUrl;
+          // 기존 요소 제거
+          mediaElement.remove();
           
-          // 모든 이미지를 로드하되 스크롤 애니메이션 로직에 맡김
-          img.style.display = 'block';
+          // 새로운 미디어 요소 생성 (이미지 또는 비디오)
+          const newMediaElement = createMediaElement(
+            mediaUrl, 
+            `Vision Rolling ${index + 1}`, 
+            'card-image'
+          );
+          
+          // 모든 미디어를 로드하되 스크롤 애니메이션 로직에 맡김
+          newMediaElement.style.display = 'block';
           
           // 스크롤 애니메이션의 자동 전환 로직이 작동하도록 초기 상태만 설정
           if (index === 0) {
-            img.classList.add('active');
-            img.style.opacity = '1';
-            img.style.visibility = 'visible';
+            newMediaElement.classList.add('active');
+            newMediaElement.style.opacity = '1';
+            newMediaElement.style.visibility = 'visible';
           } else {
-            img.classList.remove('active');
-            img.style.opacity = '0';
-            img.style.visibility = 'hidden';
+            newMediaElement.classList.remove('active');
+            newMediaElement.style.opacity = '0';
+            newMediaElement.style.visibility = 'hidden';
           }
           
-          img.onload = () => {
-            console.log(`비전 롤링 이미지 ${index + 1} 로드 성공:`, imageUrl);
-            // 로드 성공 후 스크롤 애니메이션 로직이 제어하도록 함
+          // 로드 완료 이벤트 처리
+          if (newMediaElement.tagName === 'VIDEO') {
+            newMediaElement.onloadeddata = () => {
+              console.log(`비전 롤링 비디오 ${index + 1} 로드 성공:`, mediaUrl);
+              // 로드 성공 후 스크롤 애니메이션 로직이 제어하도록 함
+            };
+          } else {
+            newMediaElement.onload = () => {
+              console.log(`비전 롤링 이미지 ${index + 1} 로드 성공:`, mediaUrl);
+              // 로드 성공 후 스크롤 애니메이션 로직이 제어하도록 함
+            };
+          }
+          
+          newMediaElement.onerror = () => {
+            console.error(`비전 롤링 미디어 ${index + 1} 로드 실패:`, mediaUrl);
           };
-          img.onerror = () => {
-            console.error(`비전 롤링 이미지 ${index + 1} 로드 실패:`, imageUrl);
-          };
+          
+          // 부모 요소에 새 요소 추가
+          const visionCard = document.querySelector('.vision-card');
+          if (visionCard) {
+            visionCard.appendChild(newMediaElement);
+          }
         } else {
-          img.style.display = 'none';
-          img.classList.remove('active');
+          mediaElement.style.display = 'none';
+          mediaElement.classList.remove('active');
         }
       });
     }
@@ -1587,32 +1751,55 @@ window.addEventListener('load', function() {
       businessMoreBtn.textContent = businessData.moreButtonText;
     }
     
-    // 비즈니스 카드 업데이트
+    // 비즈니스 카드 업데이트 및 표시/숨김 처리
     if (businessData.cards && businessCards.length > 0) {
+      const availableCards = businessData.cards.length;
+      
       businessCards.forEach((card, index) => {
-        if (businessData.cards[index]) {
+        if (index < availableCards && businessData.cards[index]) {
+          // 어드민에서 관리하는 카드만 표시
+          card.style.display = 'block';
+          
           const cardData = businessData.cards[index];
           const cardImage = card.querySelector('.business-card-image');
           const cardTitle = card.querySelector('.business-card-title');
           const cardDescription = card.querySelector('.business-card-description');
           
           if (cardImage && cardData.image) {
-            const imageUrl = convertToAbsoluteUrl(cardData.image);
-            console.log(`비즈니스 카드 ${index + 1} 이미지 URL:`, imageUrl);
+            const mediaUrl = convertToAbsoluteUrl(cardData.image);
+            console.log(`비즈니스 카드 ${index + 1} 미디어 URL:`, mediaUrl);
             
-            // 기존 src 제거 후 새로 설정
-            cardImage.src = '';
-            cardImage.src = imageUrl;
-            cardImage.alt = cardData.title || `Business Area ${index + 1}`;
+            // 기존 요소 제거
+            cardImage.remove();
             
-            cardImage.onload = () => {
-              console.log(`비즈니스 카드 ${index + 1} 이미지 로드 성공:`, imageUrl);
-              cardImage.style.opacity = '1';
-              cardImage.style.visibility = 'visible';
+            // 새로운 미디어 요소 생성 (이미지 또는 비디오)
+            const newMediaElement = createMediaElement(
+              mediaUrl, 
+              cardData.title || `Business Area ${index + 1}`, 
+              'business-card-image'
+            );
+            
+            // 로드 완료 이벤트 처리
+            if (newMediaElement.tagName === 'VIDEO') {
+              newMediaElement.onloadeddata = () => {
+                console.log(`비즈니스 카드 ${index + 1} 비디오 로드 성공:`, mediaUrl);
+                newMediaElement.style.opacity = '1';
+                newMediaElement.style.visibility = 'visible';
+              };
+            } else {
+              newMediaElement.onload = () => {
+                console.log(`비즈니스 카드 ${index + 1} 이미지 로드 성공:`, mediaUrl);
+                newMediaElement.style.opacity = '1';
+                newMediaElement.style.visibility = 'visible';
+              };
+            }
+            
+            newMediaElement.onerror = () => {
+              console.error(`비즈니스 카드 ${index + 1} 미디어 로드 실패:`, mediaUrl);
             };
-            cardImage.onerror = () => {
-              console.error(`비즈니스 카드 ${index + 1} 이미지 로드 실패:`, imageUrl);
-            };
+            
+            // 부모 요소에 새 요소 추가
+            card.appendChild(newMediaElement);
           }
           
           if (cardTitle && cardData.title) {
@@ -1622,6 +1809,9 @@ window.addEventListener('load', function() {
           if (cardDescription && cardData.desc) {
             cardDescription.textContent = cardData.desc;
           }
+        } else {
+          // 어드민에서 관리하지 않는 카드는 숨김
+          card.style.display = 'none';
         }
       });
     }
@@ -1629,30 +1819,109 @@ window.addEventListener('load', function() {
   
   // Media 섹션 업데이트
   function updateMediaSection(mediaData) {
+    console.log('updateMediaSection 호출됨:', mediaData);
     if (!mediaData) return;
     
+    // 섹션이 비활성화된 경우 섹션 숨기기
+    const mediaSection = document.querySelector('.media-section');
+    if (mediaSection) {
+      const isActive = mediaData.active !== false; // 기본값 true
+      mediaSection.style.display = isActive ? 'block' : 'none';
+      
+      if (!isActive) {
+        console.log('미디어 섹션이 비활성화되어 숨김 처리됨');
+        return;
+      }
+    }
+    
     const mediaIntro = document.querySelector('.media-header p');
-    const mediaItems = document.querySelectorAll('.media-item');
     
     // 소개 텍스트 업데이트 (HTML 허용)
     if (mediaIntro && mediaData.richTextIntroHtml) {
       mediaIntro.innerHTML = mediaData.richTextIntroHtml;
     }
     
-    // 미디어 아이템 업데이트
-    if (mediaData.items && mediaItems.length > 0) {
+    // 미디어 아이템 업데이트 - 동적으로 요소 재수집
+    if (mediaData.items) {
+      // 모든 미디어 아이템을 최대 8개로 제한
+      const itemsToShow = mediaData.items.slice(0, 8);
+      
+      // 매번 최신 DOM 요소들을 동적으로 가져오기
+      const mediaItems = Array.from(document.querySelectorAll('.media-item'));
+      console.log('미디어 아이템 개수:', mediaItems.length, '표시할 아이템 개수:', itemsToShow.length);
+      
       mediaItems.forEach((item, index) => {
-        if (mediaData.items[index]) {
-          const itemData = mediaData.items[index];
-          const itemImage = item.querySelector('.media-img');
+        if (itemsToShow[index]) {
+          const itemData = itemsToShow[index];
+          const mediaContainer = item.querySelector('.media-image');
           const itemCategory = item.querySelector('.media-category');
           const itemTitle = item.querySelector('.media-item-title');
           const itemDate = item.querySelector('.media-date');
           
-          if (itemImage && itemData.image) {
-            const imageUrl = convertToAbsoluteUrl(itemData.image);
-            itemImage.src = imageUrl;
-            itemImage.alt = itemData.title || `Media Item ${index + 1}`;
+          if (mediaContainer && itemData.image) {
+            const mediaUrl = convertToAbsoluteUrl(itemData.image);
+            const isVideo = isVideoFile(mediaUrl);
+            console.log(`미디어 아이템 ${index + 1} 업데이트:`, mediaUrl, '비디오:', isVideo);
+            
+            // 기존 미디어 요소 제거
+            const existingMedia = mediaContainer.querySelector('img, video');
+            if (existingMedia) {
+              existingMedia.remove();
+            }
+            
+            // 새로운 미디어 요소 생성
+            const mediaElement = createMediaElement(mediaUrl, itemData.title || `Media Item ${index + 1}`, 'media-img');
+            
+            if (isVideo) {
+              // 비디오인 경우 썸네일과 호버 재생 기능 추가
+              const container = document.createElement('div');
+              container.className = 'video-container';
+              
+              const thumbnail = document.createElement('img');
+              thumbnail.alt = '비디오 썸네일';
+              thumbnail.style.width = '100%';
+              thumbnail.style.height = '100%';
+              thumbnail.style.objectFit = 'cover';
+              
+              // 썸네일 생성
+              mediaElement.addEventListener('loadeddata', () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = mediaElement.videoWidth;
+                canvas.height = mediaElement.videoHeight;
+                ctx.drawImage(mediaElement, 0, 0, canvas.width, canvas.height);
+                thumbnail.src = canvas.toDataURL('image/jpeg');
+              });
+              
+              // 호버 이벤트
+              container.addEventListener('mouseenter', () => {
+                thumbnail.style.display = 'none';
+                mediaElement.style.display = 'block';
+                mediaElement.currentTime = 0;
+                mediaElement.play().catch(error => {
+                  console.log('비디오 자동 재생 실패 (정상):', error);
+                });
+              });
+              
+              container.addEventListener('mouseleave', () => {
+                mediaElement.pause();
+                mediaElement.currentTime = 0;
+                mediaElement.style.display = 'none';
+                thumbnail.style.display = 'block';
+              });
+              
+              // 초기 상태 설정
+              mediaElement.style.display = 'none';
+              container.appendChild(thumbnail);
+              container.appendChild(mediaElement);
+              
+              // 기존 요소를 컨테이너로 교체
+              mediaContainer.innerHTML = '';
+              mediaContainer.appendChild(container);
+            } else {
+              // 이미지인 경우에만 추가
+              mediaContainer.appendChild(mediaElement);
+            }
           }
           
           if (itemCategory && itemData.category) {
@@ -1673,15 +1942,38 @@ window.addEventListener('load', function() {
   
   // Career 섹션 업데이트
   function updateCareerSection(careerData) {
+    console.log('updateCareerSection 호출됨:', careerData);
     if (!careerData?.posts) return;
+    
+    // 섹션이 비활성화된 경우 섹션 숨기기
+    const careerSection = document.querySelector('.career-section');
+    if (careerSection) {
+      const isActive = careerData.active !== false; // 기본값 true
+      careerSection.style.display = isActive ? 'block' : 'none';
+      
+      if (!isActive) {
+        console.log('채용 섹션이 비활성화되어 숨김 처리됨');
+        return;
+      }
+    }
     
     const careerItems = document.querySelectorAll('.career-item');
     
-    // 활성 채용 공고만 필터링하고 최대 2개로 제한
-    const activePosts = careerData.posts.filter(post => post.active).slice(0, 2);
+    // 모든 채용 공고를 날짜순으로 정렬하고 최신 2개만 표시
+    const sortedPosts = careerData.posts
+      .filter(post => post.title && post.title !== 'on') // 유효한 제목이 있는 포스트만
+      .sort((a, b) => {
+        // 날짜 기준으로 정렬 (최신순)
+        const dateA = new Date(a.period?.start || a.period?.end || '1900-01-01');
+        const dateB = new Date(b.period?.start || b.period?.end || '1900-01-01');
+        return dateB - dateA;
+      })
+      .slice(0, 2); // 최신 2개만
     
-    // 활성 공고가 없으면 기본 공고 사용
-    const postsToShow = activePosts.length > 0 ? activePosts : [
+    console.log('메인 화면 표시할 채용 공고 개수:', sortedPosts.length, '전체 공고:', careerData.posts.length);
+    
+    // 정렬된 포스트가 없으면 기본 공고 사용
+    const postsToShow = sortedPosts.length > 0 ? sortedPosts : [
       {
         title: '경력직 PM/PO 채용',
         period: { start: '2025.08.01', end: '2025.08.15' }
