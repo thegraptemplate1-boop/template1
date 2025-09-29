@@ -14,6 +14,10 @@
   <!-- Hero Section -->
   <section class="hero">
     <div class="hero-background">
+      <!-- 로딩 스켈레톤 -->
+      <div class="hero-loading-skeleton" id="hero-loading-skeleton"></div>
+      
+      <!-- 기본 이미지들 (JavaScript 비활성화 시 대비) -->
       <img src="./img/hero_Image-1.jpg" alt="AEROGRID Hero Background 1" class="hero-bg-image active">
       <img src="./img/hero_Image-2.jpg" alt="AEROGRID Hero Background 2" class="hero-bg-image">
       <img src="./img/hero_Image-3.jpg" alt="AEROGRID Hero Background 3" class="hero-bg-image">
@@ -267,7 +271,7 @@
         </div>
 
         <div class="media-scroll-container">
-          <div class="media-grid">
+          <div class="media-grid" id="media-grid">
             <div class="media-item">
               <div class="media-image">
                 <img src="./img/media-1.jpg" alt="AEC 및 측량" class="media-img" draggable="false">

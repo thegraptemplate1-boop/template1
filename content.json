@@ -1,7 +1,7 @@
 {
   "meta": {
     "version": "1.0.0",
-    "lastModified": "2025-09-19T08:45:44.466Z",
+    "lastModified": "2025-09-29T09:11:12.607Z",
     "modifiedBy": "admin",
     "backup": {
       "auto": true,
@@ -70,15 +70,15 @@
     "moreButtonText": "사업분야 더 볼래?",
     "cards": [
       {
-        "image": "http://localhost:3000/uploads/optimized/1758157937560-pqgll7mvjd.jpg",
-        "title": "도시 계획이닷!",
-        "desc": "멋진 도시를 만들어봅시다",
-        "link": ""
-      },
-      {
         "image": "http://localhost:3000/uploads/optimized/1758158418258-wsc9693c1ra.jpg",
         "title": "바다 좋아!!!!👍",
         "desc": "나만 좋니?",
+        "link": ""
+      },
+      {
+        "image": "http://localhost:3000/uploads/optimized/1758157937560-pqgll7mvjd.jpg",
+        "title": "도시 계획이닷! 맞아?",
+        "desc": "멋진 도시를 만들어봅시다",
         "link": ""
       },
       {
@@ -91,6 +91,12 @@
         "image": "http://localhost:3000/uploads/optimized/1758187807455-kp6f0ykyn0k.jpg",
         "title": "밥 먹자!!!",
         "desc": "뭐 먹지?",
+        "link": ""
+      },
+      {
+        "image": "http://localhost:3000/uploads/optimized/1759137054663-2r7v89ydn02.jpg",
+        "title": "55555",
+        "desc": "5656565656565",
         "link": ""
       }
     ]
@@ -109,7 +115,7 @@
       },
       {
         "id": "media-2",
-        "image": "http://localhost:3000/uploads/optimized/1758260224965-5q6efrwaen7.mp4",
+        "image": "http://localhost:3000/uploads/1758504579338-95hq930jnn.mp4",
         "category": "도시 계획",
         "title": "송전선 500km를 밤새 점검하는 드론 기술",
         "date": "2025.03.21",
@@ -158,7 +164,8 @@
         "period": {
           "start": "2025-09-28",
           "end": "2025-10-10"
-        }
+        },
+        "status": "active"
       },
       {
         "id": "career-2",
@@ -168,7 +175,8 @@
         "period": {
           "start": "",
           "end": ""
-        }
+        },
+        "status": "active"
       },
       {
         "id": "career-3",
@@ -178,7 +186,8 @@
         "period": {
           "start": "",
           "end": ""
-        }
+        },
+        "status": "active"
       },
       {
         "id": "career-4",
@@ -188,7 +197,8 @@
         "period": {
           "start": "",
           "end": ""
-        }
+        },
+        "status": "active"
       },
       {
         "id": "career-5",
@@ -198,7 +208,8 @@
         "period": {
           "start": "",
           "end": ""
-        }
+        },
+        "status": "active"
       },
       {
         "id": "career-6",
@@ -208,7 +219,8 @@
         "period": {
           "start": "",
           "end": ""
-        }
+        },
+        "status": "active"
       },
       {
         "id": "career-7",
@@ -218,7 +230,8 @@
         "period": {
           "start": "",
           "end": ""
-        }
+        },
+        "status": "active"
       },
       {
         "id": "career-8",
@@ -228,18 +241,21 @@
         "period": {
           "start": "",
           "end": ""
-        }
+        },
+        "status": "active"
       }
     ]
   },
   "footer": {
     "title": "하늘을 설계하다",
+    "subtitle": "모든 현장의 안전과 효율을 동시에 되겠어?",
     "buttonText": "문의하기",
     "logo": "http://localhost:3000/img/logo.svg",
     "sns": {
       "instagram": "https://instagram.com/aerogrid",
       "linkedin": "https://linkedin.com/company/aerogrid",
-      "youtube": "https://youtube.com/@aerogrid"
+      "youtube": "https://youtube.com/@aerogrid",
+      "blog": "https://blog.aerogrid.com"
     }
   },
   "seo": {

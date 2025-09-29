@@ -113,9 +113,6 @@ function ensureCursorOnTop() {
   // 주기적으로 커서 위치 확인 및 보장 (더 자주 실행)
   setInterval(ensureCursorOnTop, 50);
   
-  // 추가 보장: 스크롤 이벤트에서도 커서 상태 확인
-  window.addEventListener('scroll', ensureCursorOnTop, { passive: true });
-  
   // 단일 커서 사용 - 모든 섹션에서 동일하게 작동
   
   // 단일 커서로 모든 섹션에서 동일하게 작동
@@ -130,47 +127,84 @@ function ensureCursorOnTop() {
   tick();
 })();
 
-// Header scroll effect
-let lastScrollY = 0;
-let isScrollingDown = false;
-let scrollTimeout = null;
-
-window.addEventListener('scroll', function() {
-  const header = document.querySelector('.header');
-  const currentScrollY = window.scrollY;
-  
-  // 기존 타이머 클리어
-  if (scrollTimeout) {
-    clearTimeout(scrollTimeout);
+// 통합 스크롤 이벤트 관리자
+class ScrollManager {
+  constructor() {
+    this.lastScrollY = 0;
+    this.isScrollingDown = false;
+    this.scrollTimeout = null;
+    this.ticking = false;
+    this.header = document.querySelector('.header');
+    this.scrollHandlers = [];
+    
+    // 스크롤 이벤트 리스너 등록 (passive: true로 성능 최적화)
+    window.addEventListener('scroll', this.handleScroll.bind(this), { passive: true });
   }
   
-  // 스크롤 방향 감지
-  if (currentScrollY > lastScrollY && currentScrollY > 100) {
-    // 아래로 스크롤 - GNB 숨김
-    isScrollingDown = true;
-    header.classList.add('hidden');
-  } else if (currentScrollY < lastScrollY) {
-    // 위로 스크롤 - GNB 표시
-    isScrollingDown = false;
-    header.classList.remove('hidden');
+  // 추가 스크롤 핸들러 등록
+  addScrollHandler(handler) {
+    this.scrollHandlers.push(handler);
   }
   
-  // 스크롤 상태에 따른 배경 변경
-  if (currentScrollY > 50) {
-    header.classList.add('scrolled');
-  } else {
-    header.classList.remove('scrolled');
-  }
-  
-  // 2초 후 자동으로 GNB 노출
-  scrollTimeout = setTimeout(() => {
-    if (currentScrollY > 100) { // 100px 이상 스크롤된 상태에서만
-      header.classList.remove('hidden');
+  handleScroll() {
+    if (!this.ticking) {
+      requestAnimationFrame(this.updateScroll.bind(this));
+      this.ticking = true;
     }
-  }, 2000);
+  }
   
-  lastScrollY = currentScrollY;
-});
+  updateScroll() {
+    const currentScrollY = window.scrollY;
+  
+    // 기존 타이머 클리어
+    if (this.scrollTimeout) {
+      clearTimeout(this.scrollTimeout);
+    }
+    
+    // 스크롤 방향 감지
+    if (currentScrollY > this.lastScrollY && currentScrollY > 100) {
+      // 아래로 스크롤 - GNB 숨김
+      if (this.header) {
+        this.header.classList.add('hidden');
+      }
+      this.isScrollingDown = true;
+    } else if (currentScrollY < this.lastScrollY) {
+      // 위로 스크롤 - GNB 표시
+      if (this.header) {
+        this.header.classList.remove('hidden');
+      }
+      this.isScrollingDown = false;
+    }
+    
+    // 스크롤 상태에 따른 배경 변경
+    if (currentScrollY > 50) {
+      this.header.classList.add('scrolled');
+    } else {
+      this.header.classList.remove('scrolled');
+    }
+    
+    // 2초 후 자동으로 GNB 노출
+    this.scrollTimeout = setTimeout(() => {
+      if (currentScrollY > 100) {
+        this.header.classList.remove('hidden');
+      }
+    }, 2000);
+    
+    this.lastScrollY = currentScrollY;
+    
+    // 등록된 추가 스크롤 핸들러들 실행
+    this.scrollHandlers.forEach(handler => {
+      if (typeof handler === 'function') {
+        handler();
+      }
+    });
+    
+    this.ticking = false;
+  }
+}
+
+// 스크롤 매니저 초기화
+const scrollManager = new ScrollManager();
 
 // Hero image slider
 document.addEventListener('DOMContentLoaded', function() {
@@ -1048,7 +1082,8 @@ window.addEventListener('load', function() {
          }
   }
 
-  window.addEventListener('scroll', onScroll, { passive:true });
+  // 스크롤 이벤트를 통합 스크롤 매니저에 등록
+  scrollManager.addScrollHandler(onScroll);
   
   // 카드 이미지 자동 전환 (0.8초 간격) - 겹침 없는 전환
   let currentImageIndex = 0;
@@ -1213,65 +1248,46 @@ window.addEventListener('load', function() {
         businessSubtitle.style.transform = 'translateY(100px)';
         businessSubtitle.style.opacity = '0';
       }
+      
+      // 버튼 숨김
       if (businessMoreBtn) {
         businessMoreBtn.style.transform = 'translateY(100px)';
         businessMoreBtn.style.opacity = '0';
       }
     }
 
-    // 카드 애니메이션 - 지그재그 패턴을 유지하면서 하나의 덩어리로 스크롤
-    const cardHeight = 600; // 카드 높이 (px)
-    const cardGap = 180; // 카드 간 상하 갭 (px)
-    const totalCardSpace = cardHeight + cardGap; // 카드 + 갭의 총 공간 (780px)
-    
-    // 첫 번째 카드가 화면 중앙에 오는 시작 위치
+    // 카드 애니메이션 - 스크롤에 따라 카드들이 위로 흘러가는 효과
+    const cardHeight = 600;
+    const cardGap = 180;
+    const totalCardSpace = cardHeight + cardGap;
     const startY = window.innerHeight / 2 - cardHeight / 2;
     
-    // 마지막 카드가 화면 중앙에 오기 위한 정확한 스크롤 거리 계산
-    const lastCardIndex = businessCards.length - 1; // 마지막 카드 인덱스 (4)
-    const distanceToLastCard = lastCardIndex * totalCardSpace; // 첫 번째 카드에서 마지막 카드까지의 거리
-    
-    // 추가 여유 구간 (앞쪽과 뒤쪽 모두)
-    const additionalScrollDistance = window.innerHeight * 0.5; // 화면 높이의 50%만큼 추가 여유
-    const maxScrollDistance = distanceToLastCard + (additionalScrollDistance * 2); // 앞쪽 + 뒤쪽 여유 구간
-    
-    // 스크롤 진행률에 따른 스크롤 오프셋 계산
-    let scrollOffset;
-    if (p <= 0.1) {
-      // 0~10%: 첫 번째 카드 고정 유지 (백스크롤 여유 구간)
-      scrollOffset = 0;
-    } else if (p <= 0.9) {
-      // 10~90%: 카드들이 순차적으로 중앙에 도달
-      const adjustedP = (p - 0.1) / 0.8; // 0~1 범위로 정규화
-      scrollOffset = adjustedP * distanceToLastCard;
-    } else {
-      // 90~100%: 마지막 카드 고정 유지 (앞스크롤 여유 구간)
-      scrollOffset = distanceToLastCard;
-    }
+    // 스크롤 타이밍 조정: 1번 카드 시작을 늦추고 5번 카드 끝을 늦춤
+    const startDelay = 0.1; // 10% 지연 후 시작 (0.05 = 5%, 0.15 = 15% 등으로 조정 가능)
+    const endDelay = 0.1;   // 10% 더 늦게 끝남 (0.05 = 5%, 0.15 = 15% 등으로 조정 가능)
+    const adjustedP = Math.max(0, Math.min(1, (p - startDelay) / (1 - startDelay - endDelay)));
     
     businessCards.forEach((card, index) => {
-      // 각 카드의 상대적 위치 계산 (첫 번째 카드 기준)
       const cardRelativeY = index * totalCardSpace;
+      const cardY = startY + cardRelativeY;
+      const scrollOffset = adjustedP * (businessCards.length - 1) * totalCardSpace;
+      const finalY = cardY - scrollOffset;
       
-      // 전체 그룹이 스크롤되면서 각 카드의 절대 위치
-      const cardY = startY + cardRelativeY - scrollOffset;
-      
-      // 투명도는 항상 1로 유지 (페이드 효과 없음) - CSS에서 이미 설정됨
-      // card.style.opacity = '1'; // CSS에서 이미 opacity: 1로 설정됨
-      
-      // 카드 위치 설정 (지그재그 패턴은 CSS에서 처리)
-      card.style.transform = `translateY(${cardY}px)`;
+      card.style.transform = `translateY(${finalY}px)`;
+      card.style.opacity = '1'; // CSS에서 이미 opacity: 1로 설정됨
     });
   }
 
-  // 초기 카드 위치 설정
+  // 초기화
   initializeCards();
-  
-  // 윈도우 리사이즈 시에도 카드 위치 재설정
-  window.addEventListener('resize', initializeCards);
-  
   window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', () => {
+    initializeCards();
+    update();
+  });
 })();
+
+  
 
 // 푸터 애니메이션 제어
 (function() {
@@ -1390,7 +1406,7 @@ window.addEventListener('load', function() {
   // 콘텐츠 로드 함수
   async function loadContent() {
     try {
-      const response = await fetch('/content.json');
+      const response = await fetch('./content.json');
       if (!response.ok) {
         throw new Error('콘텐츠를 불러올 수 없습니다');
       }
@@ -1476,19 +1492,22 @@ window.addEventListener('load', function() {
   // URL을 절대 경로로 변환하는 헬퍼 함수
   function convertToAbsoluteUrl(url) {
     if (!url) return url;
+
+    // 1) 과거에 저장된 localhost URL은 현재 오리진으로 치환
+    url = url.replace(/^https?:\/\/localhost(?::\d+)?/i, window.location.origin);
     
-    // 이미 절대 URL인 경우 그대로 반환
+    // 2) 이미 절대 URL인 경우 그대로 반환
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
     
-    // 상대 경로인 경우 절대 경로로 변환
+    // 3) 상대 경로인 경우 절대 경로로 변환 (프로젝트 페이지 대응)
     if (url.startsWith('/')) {
       return window.location.origin + url;
     }
     
-    // 상대 경로인 경우 현재 도메인 추가
-    return window.location.origin + '/' + url.replace(/^\.\//, '');
+    // 4) 상대 경로인 경우 현재 도메인 추가
+    return new URL(url.replace(/^\/+/, './'), window.location.href).toString();
   }
   
   // 파일이 비디오인지 확인하는 헬퍼 함수
@@ -1509,6 +1528,7 @@ window.addEventListener('load', function() {
     if (isVideoFile(absoluteUrl)) {
       console.log('비디오 요소 생성 중...');
       const video = document.createElement('video');
+      video.crossOrigin = 'anonymous'; // CORS 설정 추가
       video.src = absoluteUrl;
       video.alt = alt;
       video.className = className;
@@ -1517,11 +1537,11 @@ window.addEventListener('load', function() {
       video.autoplay = true;
       video.playsInline = true;
       video.preload = 'metadata';
-      // crossOrigin 제거 - 같은 도메인이므로 불필요
       video.style.width = '100%';
       video.style.height = '100%';
       video.style.objectFit = 'cover';
       video.style.display = 'block';
+      video.style.opacity = '1'; // 강제로 표시
       
       // 비디오 로딩 완료 로그
       video.onloadeddata = () => {
@@ -1530,6 +1550,17 @@ window.addEventListener('load', function() {
       
       video.onerror = (error) => {
         console.error('비디오 로딩 실패:', absoluteUrl, error);
+        // 비디오 로드 실패 시 대체 이미지로 교체
+        const img = document.createElement('img');
+        img.src = './img/media-2.jpg'; // 기본 미디어 이미지 사용
+        img.alt = alt;
+        img.className = className;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.display = 'block';
+        img.style.opacity = '1'; // 강제로 표시
+        return img;
       };
       
       return video;
@@ -1543,6 +1574,7 @@ window.addEventListener('load', function() {
       img.style.height = '100%';
       img.style.objectFit = 'cover';
       img.style.display = 'block';
+      img.style.opacity = '1'; // 강제로 표시
       
       img.onload = () => {
         console.log('이미지 로딩 완료:', absoluteUrl);
@@ -1565,27 +1597,53 @@ window.addEventListener('load', function() {
     const heroTitle = document.querySelector('.hero-title .text-content');
     const heroSubtitle = document.querySelector('.hero-subtitle .text-content');
     const dots = document.querySelectorAll('.pagination-dots .dot');
+    const loadingSkeleton = document.getElementById('hero-loading-skeleton');
 
-    // 1) 기존 미디어 싹 제거 (오버레이 제외)
+    // 1) 기존 미디어 싹 제거 (오버레이와 스켈레톤 제외)
     heroBackground.querySelectorAll('.hero-bg-image').forEach(el => el.remove());
 
     // 2) 활성 슬라이드만 재생성
     const activeSlides = heroData.slides.filter(s => s.active).slice(0, 5);
     const frag = document.createDocumentFragment();
 
-    activeSlides.forEach((s, i) => {
+    // 이미지 프리로딩 및 점진적 로딩
+    const imagePromises = activeSlides.map((s, i) => {
         const url = convertToAbsoluteUrl(s.background);
-        const el = createMediaElement(url, `AEROGRID Hero Background ${i+1}`, 'hero-bg-image');
-        el.style.opacity   = (i === 0) ? '1' : '0';
-        el.style.visibility= (i === 0) ? 'visible' : 'hidden';
-        if (el.tagName === 'VIDEO') {
-            el.addEventListener('loadedmetadata', () => { if (i === 0) el.play().catch(()=>{}); });
-        }
-        frag.appendChild(el);
+        return new Promise((resolve) => {
+            const el = createMediaElement(url, `AEROGRID Hero Background ${i+1}`, 'hero-bg-image');
+            el.style.opacity = (i === 0) ? '1' : '0';
+            el.style.visibility = (i === 0) ? 'visible' : 'hidden';
+            
+            // 이미지/비디오 로드 완료 시 resolve
+            if (el.tagName === 'IMG') {
+                el.onload = () => resolve(el);
+                el.onerror = () => resolve(el); // 에러 시에도 resolve
+            } else if (el.tagName === 'VIDEO') {
+                el.addEventListener('loadedmetadata', () => { 
+                    if (i === 0) el.play().catch(()=>{}); 
+                    resolve(el);
+                });
+                el.addEventListener('error', () => resolve(el)); // 에러 시에도 resolve
+            } else {
+                resolve(el);
+            }
+            
+            frag.appendChild(el);
+        });
     });
 
     // 오버레이 위계 보존을 위해 오버레이 앞에 삽입
     heroBackground.insertBefore(frag, overlay);
+
+    // 모든 이미지 로드 완료 후 스켈레톤 숨기기
+    Promise.all(imagePromises).then(() => {
+        if (loadingSkeleton) {
+            loadingSkeleton.classList.add('hidden');
+            setTimeout(() => {
+                loadingSkeleton.style.display = 'none';
+            }, 300); // transition 시간과 맞춤
+        }
+    });
 
     // 3) 텍스트/도트 세팅(기존 로직 유지)
     if (activeSlides[0]) {
@@ -1735,6 +1793,7 @@ window.addEventListener('load', function() {
   
   // Business 섹션 업데이트
   function updateBusinessSection(businessData) {
+    console.log('updateBusinessSection 호출됨:', businessData);
     if (!businessData) return;
     
     const businessSubtitle = document.querySelector('.business-subtitle');
@@ -1815,6 +1874,7 @@ window.addEventListener('load', function() {
         }
       });
     }
+    
   }
   
   // Media 섹션 업데이트
@@ -1824,6 +1884,9 @@ window.addEventListener('load', function() {
     
     // 섹션이 비활성화된 경우 섹션 숨기기
     const mediaSection = document.querySelector('.media-section');
+    const loadingSkeleton = document.getElementById('media-loading-skeleton');
+    const mediaGrid = document.getElementById('media-grid');
+    
     if (mediaSection) {
       const isActive = mediaData.active !== false; // 기본값 true
       mediaSection.style.display = isActive ? 'block' : 'none';
@@ -1850,6 +1913,9 @@ window.addEventListener('load', function() {
       const mediaItems = Array.from(document.querySelectorAll('.media-item'));
       console.log('미디어 아이템 개수:', mediaItems.length, '표시할 아이템 개수:', itemsToShow.length);
       
+      // 미디어 아이템 로딩 Promise 배열
+      const mediaLoadPromises = [];
+      
       mediaItems.forEach((item, index) => {
         if (itemsToShow[index]) {
           const itemData = itemsToShow[index];
@@ -1871,6 +1937,20 @@ window.addEventListener('load', function() {
             
             // 새로운 미디어 요소 생성
             const mediaElement = createMediaElement(mediaUrl, itemData.title || `Media Item ${index + 1}`, 'media-img');
+            
+            // 미디어 로딩 Promise 추가
+            const mediaLoadPromise = new Promise((resolve) => {
+              if (mediaElement.tagName === 'IMG') {
+                mediaElement.onload = () => resolve();
+                mediaElement.onerror = () => resolve(); // 에러 시에도 resolve
+              } else if (mediaElement.tagName === 'VIDEO') {
+                mediaElement.addEventListener('loadedmetadata', () => resolve());
+                mediaElement.addEventListener('error', () => resolve()); // 에러 시에도 resolve
+              } else {
+                resolve();
+              }
+            });
+            mediaLoadPromises.push(mediaLoadPromise);
             
             if (isVideo) {
               // 비디오인 경우 썸네일과 호버 재생 기능 추가
@@ -1937,9 +2017,41 @@ window.addEventListener('load', function() {
           }
         }
       });
+      
+      // 모든 미디어 아이템 로드 완료 후 스켈레톤 숨기기
+      if (mediaLoadPromises.length > 0) {
+        Promise.all(mediaLoadPromises).then(() => {
+          if (loadingSkeleton) {
+            loadingSkeleton.classList.add('hidden');
+            setTimeout(() => {
+              loadingSkeleton.style.display = 'none';
+            }, 300); // transition 시간과 맞춤
+          }
+        });
+      }
     }
   }
   
+  // 채용 공고가 활성 상태인지 확인하는 함수
+  function isCareerPostActive(post) {
+    // 수동으로 마감 처리된 경우
+    if (post.status === 'closed') {
+      return false;
+    }
+    
+    // 종료일이 없는 경우 (상시채용)
+    if (!post.period?.end) {
+      return true;
+    }
+    
+    // 종료일이 현재 날짜보다 이후인 경우
+    const endDate = new Date(post.period.end);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // 시간을 00:00:00으로 설정
+    
+    return endDate >= today;
+  }
+
   // Career 섹션 업데이트
   function updateCareerSection(careerData) {
     console.log('updateCareerSection 호출됨:', careerData);
@@ -1959,9 +2071,15 @@ window.addEventListener('load', function() {
     
     const careerItems = document.querySelectorAll('.career-item');
     
-    // 모든 채용 공고를 날짜순으로 정렬하고 최신 2개만 표시
+    // 채용중인 공고만 필터링하고 날짜순으로 정렬하여 최신 2개만 표시
     const sortedPosts = careerData.posts
-      .filter(post => post.title && post.title !== 'on') // 유효한 제목이 있는 포스트만
+      .filter(post => {
+        // 유효한 제목이 있는 포스트만
+        if (!post.title || post.title === 'on') return false;
+        
+        // 채용중인 공고만 필터링
+        return isCareerPostActive(post);
+      })
       .sort((a, b) => {
         // 날짜 기준으로 정렬 (최신순)
         const dateA = new Date(a.period?.start || a.period?.end || '1900-01-01');
@@ -2002,7 +2120,14 @@ window.addEventListener('load', function() {
         }
         
         if (statusElement) {
-          statusElement.textContent = '채용 중';
+          // 공고 상태에 따라 텍스트 설정
+          if (isCareerPostActive(postData)) {
+            statusElement.textContent = '채용 중';
+            statusElement.className = 'career-status active';
+          } else {
+            statusElement.textContent = '채용 마감';
+            statusElement.className = 'career-status closed';
+          }
         }
         
         item.style.display = 'block';
@@ -2016,37 +2141,46 @@ window.addEventListener('load', function() {
   function updateFooterSection(footerData) {
     if (!footerData) return;
     
-    const footerTitle = document.querySelector('.footer-title .line-text');
-    const footerButton = document.querySelector('.footer-contact-btn .common-btn-text');
-    const footerLogo = document.querySelector('.footer-logo-img');
-    const socialLinks = document.querySelectorAll('.social-link');
+    console.log('푸터 섹션 업데이트:', footerData);
     
-    // 푸터 타이틀 업데이트
-    if (footerTitle && footerData.title) {
-      footerTitle.textContent = footerData.title;
+    // 푸터 타이틀 업데이트 (첫 번째 줄)
+    const footerTitleLine = document.querySelector('.footer-title .title-line[data-line="1"] .line-text');
+    if (footerTitleLine && footerData.title) {
+      footerTitleLine.textContent = footerData.title;
+    }
+    
+    // 푸터 서브타이틀 업데이트 (두 번째 줄)
+    const footerSubtitleLine = document.querySelector('.footer-title .title-line[data-line="2"] .line-text');
+    if (footerSubtitleLine && footerData.subtitle) {
+      footerSubtitleLine.textContent = footerData.subtitle;
     }
     
     // 문의하기 버튼 텍스트 업데이트
+    const footerButton = document.querySelector('.footer-contact-btn .common-btn-text');
     if (footerButton && footerData.buttonText) {
       footerButton.textContent = footerData.buttonText;
     }
     
     // 로고 이미지 업데이트
+    const footerLogo = document.querySelector('.footer-logo-img');
     if (footerLogo && footerData.logo) {
       const imageUrl = convertToAbsoluteUrl(footerData.logo);
       footerLogo.src = imageUrl;
     }
     
     // SNS 링크 업데이트
+    const socialLinks = document.querySelectorAll('.social-link');
     if (footerData.sns && socialLinks.length > 0) {
       const snsMapping = {
         'Instagram': footerData.sns.instagram,
         'LinkedIn': footerData.sns.linkedin,
-        'Youtube': footerData.sns.youtube
+        'Youtube': footerData.sns.youtube,
+        'Blog': footerData.sns.blog || '#' // Blog는 기본값 사용
       };
       
       socialLinks.forEach(link => {
         const linkText = link.textContent.trim();
+        console.log('SNS 링크 업데이트:', linkText, snsMapping[linkText]);
         if (snsMapping[linkText]) {
           link.href = snsMapping[linkText];
         }
@@ -2107,6 +2241,23 @@ window.addEventListener('load', function() {
   
   // 페이지 로드 시 콘텐츠 로드
   document.addEventListener('DOMContentLoaded', () => {
+    // 히어로 이미지들 로딩 완료 표시
+    document.querySelectorAll('.hero-bg-image').forEach(img => {
+      if (img.complete && img.naturalHeight !== 0) {
+        img.classList.add('loaded');
+      } else {
+        img.addEventListener('load', () => {
+          img.classList.add('loaded');
+        });
+      }
+    });
+    
+    // 미디어 그리드 표시
+    const mediaGrid = document.getElementById('media-grid');
+    if (mediaGrid) {
+      mediaGrid.classList.add('js-loaded');
+    }
+    
     loadContent();
   });
   
@@ -2114,3 +2265,4 @@ window.addEventListener('load', function() {
   window.applyContent = applyContent;
   window.loadContent = loadContent;
 })();
+

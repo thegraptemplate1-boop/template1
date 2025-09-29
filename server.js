@@ -5,6 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const sharp = require('sharp');
+const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs-extra');
 const path = require('path');
 
@@ -19,7 +20,134 @@ const CONTENT_FILE = path.join(__dirname, 'content.json');
 
 // 업로드 디렉토리 생성
 fs.ensureDirSync(UPLOAD_DIR);
+fs.ensureDirSync(path.join(UPLOAD_DIR, 'optimized'));
 fs.ensureDirSync(path.join(UPLOAD_DIR, 'thumbnails'));
+fs.ensureDirSync(path.join(UPLOAD_DIR, 'lqip'));
+
+// 이미지 최적화 함수
+async function optimizeImage(inputPath, outputPath, options = {}) {
+  const {
+    width = 1920,
+    height = 1080,
+    quality = 85,
+    format = 'jpeg'
+  } = options;
+
+  try {
+    let pipeline = sharp(inputPath)
+      .resize(width, height, { 
+        fit: 'cover',
+        position: 'center'
+      });
+
+    if (format === 'webp') {
+      pipeline = pipeline.webp({ quality });
+    } else if (format === 'jpeg') {
+      pipeline = pipeline.jpeg({ quality, progressive: true });
+    } else if (format === 'png') {
+      pipeline = pipeline.png({ quality, progressive: true });
+    }
+
+    await pipeline.toFile(outputPath);
+    console.log(`이미지 최적화 완료: ${outputPath}`);
+    return outputPath;
+  } catch (error) {
+    console.error('이미지 최적화 실패:', error);
+    throw error;
+  }
+}
+
+// 썸네일 생성 함수
+async function generateThumbnail(inputPath, outputPath, size = 300) {
+  try {
+    await sharp(inputPath)
+      .resize(size, size, { 
+        fit: 'cover',
+        position: 'center'
+      })
+      .jpeg({ quality: 80 })
+      .toFile(outputPath);
+    console.log(`썸네일 생성 완료: ${outputPath}`);
+    return outputPath;
+  } catch (error) {
+    console.error('썸네일 생성 실패:', error);
+    throw error;
+  }
+}
+
+// LQIP (Low Quality Image Placeholder) 생성 함수
+async function generateLQIP(inputPath, outputPath, size = 20) {
+  try {
+    const lqipBuffer = await sharp(inputPath)
+      .resize(size, size, { 
+        fit: 'cover',
+        position: 'center'
+      })
+      .jpeg({ quality: 20 })
+      .toBuffer();
+    
+    const base64 = lqipBuffer.toString('base64');
+    const dataUrl = `data:image/jpeg;base64,${base64}`;
+    
+    // LQIP를 파일로 저장
+    await fs.writeFile(outputPath, dataUrl);
+    console.log(`LQIP 생성 완료: ${outputPath}`);
+    return dataUrl;
+  } catch (error) {
+    console.error('LQIP 생성 실패:', error);
+    throw error;
+  }
+}
+
+// 비디오 최적화 함수
+async function optimizeVideo(inputPath, outputPath, options = {}) {
+  const {
+    width = 1920,
+    height = 1080,
+    bitrate = '2M',
+    fps = 30
+  } = options;
+
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .size(`${width}x${height}`)
+      .videoBitrate(bitrate)
+      .fps(fps)
+      .format('mp4')
+      .videoCodec('libx264')
+      .audioCodec('aac')
+      .on('end', () => {
+        console.log(`비디오 최적화 완료: ${outputPath}`);
+        resolve(outputPath);
+      })
+      .on('error', (err) => {
+        console.error('비디오 최적화 실패:', err);
+        reject(err);
+      })
+      .save(outputPath);
+  });
+}
+
+// 비디오 썸네일 생성 함수
+async function generateVideoThumbnail(inputPath, outputPath, timeOffset = '00:00:01') {
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .screenshots({
+        timestamps: [timeOffset],
+        filename: path.basename(outputPath),
+        folder: path.dirname(outputPath),
+        size: '300x300'
+      })
+      .on('end', () => {
+        console.log(`비디오 썸네일 생성 완료: ${outputPath}`);
+        resolve(outputPath);
+      })
+      .on('error', (err) => {
+        console.error('비디오 썸네일 생성 실패:', err);
+        reject(err);
+      });
+  });
+}
 
 // 미들웨어 설정
 app.use(helmet({
@@ -43,6 +171,7 @@ app.use('/uploads', (req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.header('Cross-Origin-Resource-Policy', 'cross-origin'); // 크로스 오리진 리소스 정책 추가
     next();
 }, express.static(UPLOAD_DIR));
 
@@ -227,25 +356,57 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 
         const originalPath = req.file.path;
         const filename = req.file.filename;
-        const optimizedPath = path.join(UPLOAD_DIR, 'optimized', filename);
-        const thumbnailPath = path.join(UPLOAD_DIR, 'thumbnails', filename);
-
-        // 최적화된 디렉토리 생성
-        await fs.ensureDir(path.dirname(optimizedPath));
-
-        // 이미지 최적화
-        const optimized = await optimizeImage(originalPath, optimizedPath);
+        const isVideo = req.file.mimetype?.startsWith('video/');
         
-        // 썸네일 생성
-        const thumbnail = await createThumbnail(originalPath, thumbnailPath);
+        let url, thumbnailUrl;
+        
+        if (isVideo) {
+            // 비디오 최적화 처리
+            const optimizedPath = path.join(UPLOAD_DIR, 'optimized', filename);
+            const thumbnailPath = path.join(UPLOAD_DIR, 'thumbnails', path.parse(filename).name + '.jpg');
 
-        // 원본 파일 삭제 (최적화된 버전 사용)
-        if (optimized) {
+            // 최적화된 디렉토리 생성
+            await fs.ensureDir(path.dirname(optimizedPath));
+            await fs.ensureDir(path.dirname(thumbnailPath));
+
+            // 비디오 최적화
+            await optimizeVideo(originalPath, optimizedPath);
+            
+            // 비디오 썸네일 생성
+            await generateVideoThumbnail(originalPath, thumbnailPath);
+
+            // 원본 파일 삭제 (최적화된 버전 사용)
             await fs.remove(originalPath);
-        }
 
-        const url = `/uploads/optimized/${filename}`;
-        const thumbnailUrl = thumbnail ? `/uploads/thumbnails/${filename}` : url;
+            url = `/uploads/optimized/${filename}`;
+            thumbnailUrl = `/uploads/thumbnails/${path.parse(filename).name}.jpg`;
+        } else {
+            // 이미지는 최적화 처리
+            const optimizedPath = path.join(UPLOAD_DIR, 'optimized', filename);
+            const thumbnailPath = path.join(UPLOAD_DIR, 'thumbnails', filename);
+            const lqipPath = path.join(UPLOAD_DIR, 'lqip', path.parse(filename).name + '.txt');
+
+            // 최적화된 디렉토리 생성
+            await fs.ensureDir(path.dirname(optimizedPath));
+            await fs.ensureDir(path.dirname(lqipPath));
+
+            // 이미지 최적화
+            const optimized = await optimizeImage(originalPath, optimizedPath);
+            
+            // 썸네일 생성
+            const thumbnail = await generateThumbnail(originalPath, thumbnailPath);
+            
+            // LQIP 생성
+            const lqip = await generateLQIP(originalPath, lqipPath);
+
+            // 원본 파일 삭제 (최적화된 버전 사용)
+            if (optimized) {
+                await fs.remove(originalPath);
+            }
+
+            url = `/uploads/optimized/${filename}`;
+            thumbnailUrl = thumbnail ? `/uploads/thumbnails/${filename}` : url;
+        }
 
         res.json({
             success: true,
@@ -287,27 +448,57 @@ app.post('/api/upload-multiple', upload.array('files', 10), async (req, res) => 
             try {
                 const originalPath = file.path;
                 const filename = file.filename;
-                const optimizedPath = path.join(UPLOAD_DIR, 'optimized', filename);
-                const thumbnailPath = path.join(UPLOAD_DIR, 'thumbnails', filename);
-
-                // 최적화된 디렉토리 생성
-                await fs.ensureDir(path.dirname(optimizedPath));
-
-                // 이미지 최적화
-                const optimized = await optimizeImage(originalPath, optimizedPath);
+                const isVideo = file.mimetype?.startsWith('video/');
                 
-                // 썸네일 생성
-                const thumbnail = await createThumbnail(originalPath, thumbnailPath);
+                let url, thumbnailUrl;
+                
+                if (isVideo) {
+                    // 비디오 최적화 처리
+                    const optimizedPath = path.join(UPLOAD_DIR, 'optimized', filename);
+                    const thumbnailPath = path.join(UPLOAD_DIR, 'thumbnails', path.parse(filename).name + '.jpg');
 
-                // 원본 파일 삭제
-                if (optimized) {
+                    // 최적화된 디렉토리 생성
+                    await fs.ensureDir(path.dirname(optimizedPath));
+                    await fs.ensureDir(path.dirname(thumbnailPath));
+
+                    // 비디오 최적화
+                    await optimizeVideo(originalPath, optimizedPath);
+                    
+                    // 비디오 썸네일 생성
+                    await generateVideoThumbnail(originalPath, thumbnailPath);
+
+                    // 원본 파일 삭제 (최적화된 버전 사용)
                     await fs.remove(originalPath);
+
+                    url = `/uploads/optimized/${filename}`;
+                    thumbnailUrl = `/uploads/thumbnails/${path.parse(filename).name}.jpg`;
+                } else {
+                    // 이미지는 최적화 처리
+                    const optimizedPath = path.join(UPLOAD_DIR, 'optimized', filename);
+                    const thumbnailPath = path.join(UPLOAD_DIR, 'thumbnails', filename);
+
+                    // 최적화된 디렉토리 생성
+                    await fs.ensureDir(path.dirname(optimizedPath));
+
+                    // 이미지 최적화
+                    const optimized = await optimizeImage(originalPath, optimizedPath);
+                    
+                    // 썸네일 생성
+                    const thumbnail = await generateThumbnail(originalPath, thumbnailPath);
+
+                    // 원본 파일 삭제
+                    if (optimized) {
+                        await fs.remove(originalPath);
+                    }
+
+                    url = `/uploads/optimized/${filename}`;
+                    thumbnailUrl = thumbnail ? `/uploads/thumbnails/${filename}` : url;
                 }
 
                 results.push({
                     success: true,
-                    url: `/uploads/optimized/${filename}`,
-                    thumbnail: thumbnail ? `/uploads/thumbnails/${filename}` : `/uploads/optimized/${filename}`,
+                    url: url,
+                    thumbnail: thumbnailUrl,
                     filename: filename,
                     size: file.size
                 });

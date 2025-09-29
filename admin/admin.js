@@ -4,6 +4,7 @@ class AdminCMS {
         this.content = null;
         this.isAuthenticated = false;
         this.currentTab = 'hero';
+        this.careerFilter = 'all'; // 채용 공고 필터 상태
         
         this.init();
     }
@@ -99,6 +100,9 @@ class AdminCMS {
         
         // Earth 배경 이미지 특별 처리
         this.setupEarthImageUpload();
+        
+        // 채용 공고 필터링 설정
+        this.setupCareerFiltering();
     }
     
     // Earth 배경 이미지 업로드 특별 설정
@@ -183,8 +187,14 @@ class AdminCMS {
     async handleLogin() {
         const password = document.getElementById('password').value;
         
+        if (!password) {
+            this.showToast('비밀번호를 입력해주세요', 'error');
+            return;
+        }
+        
         try {
             this.showLoading();
+            console.log('로그인 시도 중...', { password: password ? '***' : 'empty' });
             
             const response = await fetch('/auth/verify', {
                 method: 'POST',
@@ -194,19 +204,29 @@ class AdminCMS {
                 body: JSON.stringify({ password })
             });
             
+            console.log('로그인 응답 상태:', response.status);
+            console.log('로그인 응답 헤더:', response.headers);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const result = await response.json();
+            console.log('로그인 응답 데이터:', result);
             
             if (result.success) {
                 localStorage.setItem('admin_token', result.token);
                 this.isAuthenticated = true;
                 this.showAdminInterface();
                 this.showToast('로그인 성공', 'success');
+                console.log('로그인 성공, 토큰 저장됨');
             } else {
-                this.showToast('비밀번호가 올바르지 않습니다', 'error');
+                this.showToast(result.error || '비밀번호가 올바르지 않습니다', 'error');
+                console.error('로그인 실패:', result.error);
             }
         } catch (error) {
             console.error('로그인 오류:', error);
-            this.showToast('로그인 중 오류가 발생했습니다', 'error');
+            this.showToast(`로그인 중 오류가 발생했습니다: ${error.message}`, 'error');
         } finally {
             this.hideLoading();
         }
@@ -240,7 +260,7 @@ class AdminCMS {
     // 콘텐츠 로드
     async loadContent() {
         try {
-            const response = await fetch('/content.json');
+            const response = await fetch('../content.json');
             this.content = await response.json();
             console.log('콘텐츠 로드 완료:', this.content);
         } catch (error) {
@@ -301,6 +321,7 @@ class AdminCMS {
         // Footer 섹션
         if (this.content.footer) {
             document.getElementById('footerTitle').value = this.content.footer.title || '';
+            document.getElementById('footerSubtitle').value = this.content.footer.subtitle || '';
             document.getElementById('footerButtonText').value = this.content.footer.buttonText || '';
             this.renderImagePreview('footerLogoPreview', this.content.footer.logo);
             
@@ -308,6 +329,7 @@ class AdminCMS {
                 document.getElementById('instagramLink').value = this.content.footer.sns.instagram || '';
                 document.getElementById('linkedinLink').value = this.content.footer.sns.linkedin || '';
                 document.getElementById('youtubeLink').value = this.content.footer.sns.youtube || '';
+                document.getElementById('blogLink').value = this.content.footer.sns.blog || '';
             }
         }
         
@@ -1551,10 +1573,16 @@ class AdminCMS {
         if (!list || !this.content.career?.posts) return;
         
         list.innerHTML = '';
-        this.content.career.posts.forEach((post, index) => {
+        
+        // 필터링된 공고만 렌더링
+        const filteredPosts = this.getFilteredCareerPosts();
+        filteredPosts.forEach((post, index) => {
             const postElement = this.createCareerPost(post, index);
             list.appendChild(postElement);
         });
+        
+        // 필터 상태 업데이트
+        this.updateFilterStatus();
     }
     
     // 채용 공고 생성 (아코디언 UI)
@@ -1596,6 +1624,14 @@ class AdminCMS {
                 <div class="form-group">
                     <label>종료일</label>
                     <input type="date" value="${post.period?.end || ''}" onchange="this.dataset.changed='true'">
+                    <small class="form-help">종료일을 비워두면 상시채용으로 설정됩니다</small>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" ${post.status === 'closed' ? 'checked' : ''} onchange="this.dataset.changed='true'">
+                        채용 마감 처리
+                    </label>
+                    <small class="form-help">체크하면 종료일과 관계없이 채용 마감으로 표시됩니다</small>
                 </div>
             </div>
         `;
@@ -1738,12 +1774,14 @@ class AdminCMS {
         // Footer 섹션
         content.footer = {
             title: document.getElementById('footerTitle').value,
+            subtitle: document.getElementById('footerSubtitle').value,
             buttonText: document.getElementById('footerButtonText').value,
             logo: this.getImagePreview('footerLogoPreview'),
             sns: {
                 instagram: document.getElementById('instagramLink').value,
                 linkedin: document.getElementById('linkedinLink').value,
-                youtube: document.getElementById('youtubeLink').value
+                youtube: document.getElementById('youtubeLink').value,
+                blog: document.getElementById('blogLink').value
             }
         };
         
@@ -1940,6 +1978,7 @@ class AdminCMS {
             let categorySelect = null;
             let startDateInput = null;
             let endDateInput = null;
+            let statusCheckbox = null;
             
             // 각 입력 필드를 라벨로 정확하게 찾기
             formGroups.forEach((group) => {
@@ -1959,6 +1998,8 @@ class AdminCMS {
                         startDateInput = input;
                     } else if (labelText.includes('종료일') && input) {
                         endDateInput = input;
+                    } else if (labelText.includes('채용 마감 처리') && input) {
+                        statusCheckbox = input;
                     }
                 }
             });
@@ -1971,10 +2012,104 @@ class AdminCMS {
                 period: {
                     start: startDateInput?.value || '',
                     end: endDateInput?.value || ''
-                }
+                },
+                status: statusCheckbox?.checked ? 'closed' : 'active'
             });
         });
         return posts;
+    }
+    
+    // 채용 공고 필터링 설정
+    setupCareerFiltering() {
+        // 필터 버튼 이벤트 리스너
+        document.getElementById('showAllPosts')?.addEventListener('click', () => {
+            this.setCareerFilter('all');
+        });
+        
+        document.getElementById('showActivePosts')?.addEventListener('click', () => {
+            this.setCareerFilter('active');
+        });
+        
+        document.getElementById('showClosedPosts')?.addEventListener('click', () => {
+            this.setCareerFilter('closed');
+        });
+    }
+    
+    // 채용 공고 필터 설정
+    setCareerFilter(filter) {
+        this.careerFilter = filter;
+        
+        // 버튼 활성화 상태 업데이트
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-filter="${filter}"]`)?.classList.add('active');
+        
+        // 공고 목록 다시 렌더링
+        this.renderCareerPosts();
+    }
+    
+    // 필터링된 채용 공고 가져오기
+    getFilteredCareerPosts() {
+        if (!this.content.career?.posts) return [];
+        
+        return this.content.career.posts.filter(post => {
+            if (this.careerFilter === 'all') return true;
+            
+            const isActive = this.isCareerPostActive(post);
+            
+            if (this.careerFilter === 'active') {
+                return isActive;
+            } else if (this.careerFilter === 'closed') {
+                return !isActive;
+            }
+            
+            return true;
+        });
+    }
+    
+    // 채용 공고가 활성 상태인지 확인
+    isCareerPostActive(post) {
+        // 수동으로 마감 처리된 경우
+        if (post.status === 'closed') {
+            return false;
+        }
+        
+        // 종료일이 없는 경우 (상시채용)
+        if (!post.period?.end) {
+            return true;
+        }
+        
+        // 종료일이 현재 날짜보다 이후인 경우
+        const endDate = new Date(post.period.end);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // 시간을 00:00:00으로 설정
+        
+        return endDate >= today;
+    }
+    
+    // 필터 상태 업데이트
+    updateFilterStatus() {
+        const statusElement = document.getElementById('filterStatus');
+        if (!statusElement) return;
+        
+        const totalPosts = this.content.career?.posts?.length || 0;
+        const filteredPosts = this.getFilteredCareerPosts().length;
+        
+        let statusText = '';
+        switch (this.careerFilter) {
+            case 'all':
+                statusText = `전체 ${totalPosts}개 공고를 표시 중입니다`;
+                break;
+            case 'active':
+                statusText = `채용중 ${filteredPosts}개 공고를 표시 중입니다`;
+                break;
+            case 'closed':
+                statusText = `채용마감 ${filteredPosts}개 공고를 표시 중입니다`;
+                break;
+        }
+        
+        statusElement.textContent = statusText;
     }
     
     // 미리보기

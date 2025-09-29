@@ -128,6 +128,20 @@
       object-fit: cover;
     }
 
+    .media-img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      opacity: 1 !important; /* 강제로 표시 */
+    }
+
+    .media-image {
+      width: 100%;
+      height: 200px;
+      overflow: hidden;
+      position: relative;
+    }
+
     .news-content {
       padding: 30px;
     }
@@ -515,8 +529,8 @@
       overflow: hidden;
     }
 
-    .video-element,
-    .video-thumbnail {
+    .video-container img,
+    .video-container video {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -524,6 +538,12 @@
     }
 
     .video-thumbnail {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .video-element {
       position: absolute;
       top: 0;
       left: 0;
@@ -825,10 +845,29 @@
     const itemsPerPage = 6;
     let filteredItems = [];
 
+    // URL을 절대 URL로 변환하는 함수
+    function convertToAbsoluteUrl(url) {
+      if (!url) return '';
+
+      // 1) 과거에 저장된 localhost URL은 현재 오리진으로 치환
+      url = url.replace(/^https?:\/\/localhost(?::\d+)?/i, window.location.origin);
+
+      // 2) 이미 절대면 통과
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+      }
+
+      // 3) 상대경로 결합 (프로젝트 페이지 대응)
+      if (url.startsWith('/')) {
+        return window.location.origin + url;
+      }
+      return new URL(url.replace(/^\/+/, './'), window.location.href).toString();
+    }
+
     // 콘텐츠 로드 함수
     async function loadContent() {
       try {
-        const response = await fetch('/content.json');
+        const response = await fetch('./content.json');
         if (!response.ok) {
           throw new Error('콘텐츠를 불러올 수 없습니다');
         }
@@ -887,23 +926,28 @@
       card.setAttribute('data-category', item.category || 'all');
       card.setAttribute('data-index', index);
       
-      // 이미지/비디오 요소 생성
-      const mediaElement = createMediaElement(item.image);
+      // 미디어 영역 - 실제 DOM 노드로 조립
+      const mediaUrl = convertToAbsoluteUrl(item.image);
+      console.log('미디어 아이템 생성:', item.title, 'URL:', mediaUrl);
+      const mediaElement = createMediaElement(mediaUrl); // 이벤트가 붙은 실제 노드
+      const mediaWrap = document.createElement('div');
+      mediaWrap.className = 'media-image';
+      mediaWrap.appendChild(mediaElement); // ★ 문자열이 아니라 실제 노드를 붙인다
+      card.appendChild(mediaWrap);
       
-      card.innerHTML = `
-        <div class="news-image-container">
-          ${mediaElement.outerHTML}
-        </div>
-        <div class="news-content">
-          <div class="news-category">${item.category || '전체'}</div>
-          <h3 class="news-title">${item.title || '미디어 아이템'}</h3>
-          <p class="news-excerpt">${item.title || '상세 내용을 확인해주세요.'}</p>
-          <div class="news-meta">
-            <span class="news-date">${item.date || '2025.01.01'}</span>
-            <a href="#" class="news-read-more" onclick="openModal(${index})">자세히 보기 →</a>
-          </div>
+      // 내용 영역
+      const content = document.createElement('div');
+      content.className = 'news-content';
+      content.innerHTML = `
+        <div class="news-category">${item.category || '전체'}</div>
+        <h3 class="news-title">${item.title || '미디어 아이템'}</h3>
+        <p class="news-excerpt">${item.title || '상세 내용을 확인해주세요.'}</p>
+        <div class="news-meta">
+          <span class="news-date">${item.date || '2025.01.01'}</span>
+          <a href="#" class="news-read-more" onclick="openModal(${index})">자세히 보기 →</a>
         </div>
       `;
+      card.appendChild(content);
       
       return card;
     }
@@ -923,30 +967,90 @@
         container.className = 'video-container';
         
         const video = document.createElement('video');
+        video.crossOrigin = 'anonymous'; // CORS 설정 추가
         video.src = url;
-        video.className = 'news-image video-element';
+        video.className = 'media-img video-element';
         video.muted = true;
         video.loop = true;
         video.playsInline = true;
-        video.preload = 'metadata';
+        video.preload = 'auto'; // 메타데이터와 첫 프레임까지 로드
         video.style.display = 'none';
         
         const thumbnail = document.createElement('img');
-        thumbnail.className = 'news-image video-thumbnail';
+        thumbnail.className = 'media-img video-thumbnail';
         thumbnail.alt = '비디오 썸네일';
+        thumbnail.style.width = '100%';
+        thumbnail.style.height = '100%';
+        thumbnail.style.objectFit = 'cover';
+        thumbnail.style.opacity = '1'; // 강제로 표시
         
-        // 썸네일 생성
+        // 초기 썸네일을 기본 이미지로 설정 (블랙 화면 방지)
+        thumbnail.src = './img/media-2.jpg';
+        
+        // 썸네일 생성 함수
+        function generateThumbnail() {
+          try {
+            if (video.videoWidth > 0 && video.videoHeight > 0) {
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              
+              // 비디오 크기 설정
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+              
+              // 첫 프레임을 캔버스에 그리기
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+              
+              // 썸네일 이미지로 변환
+              const thumbnailData = canvas.toDataURL('image/jpeg', 0.8);
+              thumbnail.src = thumbnailData;
+              console.log('썸네일 생성 완료:', url);
+              return true;
+            }
+          } catch (error) {
+            console.error('썸네일 생성 실패:', error);
+          }
+          return false;
+        }
+        
+        // 비디오 로드 이벤트들
         video.addEventListener('loadeddata', () => {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          thumbnail.src = canvas.toDataURL('image/jpeg');
+          console.log('비디오 로드 완료:', url);
+          generateThumbnail();
         });
+        
+        // 비디오 로드 실패 시 대체 이미지
+        video.addEventListener('error', (e) => {
+          console.error('비디오 로드 실패:', url, e);
+          thumbnail.src = './img/media-2.jpg'; // 기본 미디어 이미지 사용
+          thumbnail.alt = '미디어 이미지';
+        });
+
+        // 비디오 메타데이터 로드 시에도 썸네일 생성 시도
+        video.addEventListener('loadedmetadata', () => {
+          console.log('비디오 메타데이터 로드 완료:', url);
+          generateThumbnail();
+        });
+        
+        // 비디오 첫 프레임 로드 시 썸네일 생성
+        video.addEventListener('canplay', () => {
+          console.log('비디오 재생 가능:', url);
+          if (!thumbnail.src.includes('data:') || thumbnail.src.includes('media-2.jpg')) {
+            generateThumbnail();
+          }
+        });
+        
+        // 비디오 로드 타임아웃 (3초로 단축)
+        setTimeout(() => {
+          if (!thumbnail.src.includes('data:') && thumbnail.src.includes('media-2.jpg')) {
+            console.log('비디오 로드 타임아웃, 썸네일 생성 재시도:', url);
+            generateThumbnail();
+          }
+        }, 3000);
         
         // 호버 이벤트
         container.addEventListener('mouseenter', () => {
+          console.log('마우스 호버 시작:', url);
           thumbnail.style.display = 'none';
           video.style.display = 'block';
           video.currentTime = 0;
@@ -954,10 +1058,20 @@
         });
         
         container.addEventListener('mouseleave', () => {
+          console.log('마우스 호버 종료:', url);
           video.pause();
           video.currentTime = 0;
           video.style.display = 'none';
-          thumbnail.style.display = 'block';
+          
+          // 썸네일이 제대로 생성되었는지 확인하고 표시
+          if (thumbnail.src && thumbnail.src.includes('data:')) {
+            thumbnail.style.display = 'block';
+          } else {
+            // 썸네일이 없으면 다시 생성 시도
+            console.log('썸네일 재생성 시도:', url);
+            generateThumbnail();
+            thumbnail.style.display = 'block';
+          }
         });
         
         container.appendChild(thumbnail);
@@ -967,7 +1081,8 @@
         const img = document.createElement('img');
         img.src = url;
         img.alt = '미디어 이미지';
-        img.className = 'news-image';
+        img.className = 'media-img';
+        img.style.opacity = '1'; // 강제로 표시
         return img;
       }
     }
@@ -1071,7 +1186,6 @@
         <div class="modal-content">
           <button class="modal-close">&times;</button>
           <div class="modal-media">
-            ${createMediaElement(item.image).outerHTML}
           </div>
           <div class="modal-info">
             <div class="modal-category">${item.category || '전체'}</div>
@@ -1083,6 +1197,12 @@
           </div>
         </div>
       `;
+      
+      // 모달 미디어 요소를 실제 DOM 노드로 추가
+      const modalMedia = modal.querySelector('.modal-media');
+      const modalMediaUrl = convertToAbsoluteUrl(item.image);
+      const modalMediaElement = createMediaElement(modalMediaUrl);
+      modalMedia.appendChild(modalMediaElement);
       
       // body 스크롤 방지
       document.body.style.overflow = 'hidden';

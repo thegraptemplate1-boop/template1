@@ -128,3 +128,6 @@ uploads/thumbnails/*.webp
 !uploads/optimized/
 !uploads/thumbnails/
 !uploads/.gitkeep
+
+
+
