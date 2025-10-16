@@ -1621,6 +1621,8 @@ body {
   object-fit: cover;
   object-position: center;
   transition: transform 0.3s ease-out;
+  position: relative;
+  z-index: 1; /* 이미지는 가장 아래 레이어 */
 }
 
 /* 카드 hover 시 이미지만 120% 확대 */
@@ -1640,6 +1642,7 @@ body {
   padding: 64px 32px 32px 32px;
   background: rgba(0, 0, 0, 0.4);
   color: white;
+  z-index: 2; /* 오버레이는 이미지 위, 버튼 아래 */
 }
 
 .business-card-title {
@@ -1690,6 +1693,7 @@ body {
   -webkit-backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
+  z-index: 3; /* 버튼은 오버레이 위에 */
 }
 
 .business-card-arrow img {
@@ -1700,7 +1704,7 @@ body {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%); /* 평상시: 써클 중앙에 표시 */
-  z-index: 2;
+  z-index: 4; /* 화살표 아이콘은 최상위 */
   filter: brightness(0) invert(1); /* 화살표를 흰색으로 */
 }
 
@@ -1730,7 +1734,7 @@ body {
   -webkit-mask: url("./img/arrow-right.svg") no-repeat center;
   -webkit-mask-size: contain;
   transition: transform 0.3s ease-out;
-  z-index: 1;
+  z-index: 4; /* 화살표 아이콘은 최상위 */
 }
 
 /* 카드 호버 시 새로운 화살표가 정중앙으로 이동 */

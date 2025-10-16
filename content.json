@@ -1,7 +1,7 @@
 {
   "meta": {
     "version": "1.0.0",
-    "lastModified": "2025-09-29T09:11:12.607Z",
+    "lastModified": "2025-10-13T02:50:20.394Z",
     "modifiedBy": "admin",
     "backup": {
       "auto": true,
@@ -13,17 +13,17 @@
     "slides": [
       {
         "id": "hero-1",
-        "title": "지갱이 냉장고 일시불",
-        "subtitle": "좆간지!!!",
-        "background": "http://localhost:3000/uploads/optimized/1758259724340-iu9a6j0yawq.jpg",
+        "title": "효율적으로<br>설계하고 계획하다",
+        "subtitle": "매핑, 모델링, 워크플로 자동화",
+        "background": "http://localhost:3000/uploads/optimized/1759394002129-8960.mp4",
         "active": true,
         "order": 1
       },
       {
         "id": "hero-2",
-        "title": "효율적으로<br>설계하고 계획하다",
-        "subtitle": "매핑, 모델링, 워크플로 자동화",
-        "background": "http://localhost:3000/uploads/optimized/1758172254075-i7g0m6y3oth.jpg",
+        "title": "1",
+        "subtitle": "1111😄👎🏻👩🏻‍💻",
+        "background": "http://localhost:3000/uploads/optimized/1759379683801-4ledq9cms16.jpg",
         "active": true,
         "order": 2
       },
@@ -31,7 +31,7 @@
         "id": "hero-3",
         "title": "333333",
         "subtitle": "33333333",
-        "background": "http://localhost:3000/uploads/optimized/1758175334604-hgq1zymlou.jpg",
+        "background": "http://localhost:3000/uploads/optimized/1760323818159-8045.jpg",
         "active": true,
         "order": 3
       },
@@ -39,17 +39,9 @@
         "id": "hero-4",
         "title": "55555",
         "subtitle": "ㅂㅈㄷㄱㅅ😳",
-        "background": "http://localhost:3000/uploads/optimized/1758245462662-ypwef7tglys.mp4",
+        "background": "http://localhost:3000/uploads/optimized/1759380238282-5883.mp4",
         "active": true,
         "order": 4
-      },
-      {
-        "id": "hero-5",
-        "title": "444",
-        "subtitle": "4444444",
-        "background": "http://localhost:3000/uploads/optimized/1758173479298-j38ovua1pbg.jpg",
-        "active": true,
-        "order": 5
       }
     ]
   },
@@ -57,13 +49,13 @@
     "title": "하늘의 데이터를 모두에게 사랑해요!",
     "subtitle": "누구나 신뢰할 수 있는 드론 데이터와 개방형 플랫폼으로 의사결정을 바꿉니다.",
     "rollingImages": [
-      "http://localhost:3000/uploads/optimized/1758257144285-937uisj1ghq.jpg",
+      "http://localhost:3000/uploads/optimized/1760323182073-6859.jpg",
       "http://localhost:3000/uploads/optimized/1758257120461-i9i77rpwxxo.jpg",
       "http://localhost:3000/uploads/optimized/1758257126417-i664wa4cp28.jpg",
       "http://localhost:3000/uploads/optimized/1758257132019-6r2kjj509gc.jpg",
       "http://localhost:3000/uploads/optimized/1758257138263-elz6ej3bp25.jpg"
     ],
-    "backgroundImage": "http://localhost:3000/uploads/optimized/1758257338049-0xvt4owa9rp.jpg"
+    "backgroundImage": "http://localhost:3000/uploads/optimized/1759389056222-6092.jpg"
   },
   "business": {
     "subtitleHtml": "드론 · AI · 원격관제 클라우드를 통해<br>인프라의 생산성과 안전성을 동시에 높입니다. 몰랐지?",
@@ -82,6 +74,12 @@
         "link": ""
       },
       {
+        "image": "http://localhost:3000/uploads/optimized/1759137054663-2r7v89ydn02.jpg",
+        "title": "55555",
+        "desc": "5656565656565",
+        "link": ""
+      },
+      {
         "image": "http://localhost:3000/uploads/optimized/1758187788863-u1xqgfrr7yo.jpg",
         "title": "3333333333",
         "desc": "333333",
@@ -91,12 +89,6 @@
         "image": "http://localhost:3000/uploads/optimized/1758187807455-kp6f0ykyn0k.jpg",
         "title": "밥 먹자!!!",
         "desc": "뭐 먹지?",
-        "link": ""
-      },
-      {
-        "image": "http://localhost:3000/uploads/optimized/1759137054663-2r7v89ydn02.jpg",
-        "title": "55555",
-        "desc": "5656565656565",
         "link": ""
       }
     ]
@@ -250,7 +242,7 @@
     "title": "하늘을 설계하다",
     "subtitle": "모든 현장의 안전과 효율을 동시에 되겠어?",
     "buttonText": "문의하기",
-    "logo": "http://localhost:3000/img/logo.svg",
+    "logo": "http://localhost:3000/uploads/optimized/1759389094817-7474.svg",
     "sns": {
       "instagram": "https://instagram.com/aerogrid",
       "linkedin": "https://linkedin.com/company/aerogrid",
@@ -270,6 +262,6 @@
       "측량",
       "모니터링"
     ],
-    "ogImage": "http://localhost:3000/img/og-image.jpg"
+    "ogImage": "http://localhost:3000/uploads/optimized/1759389103970-7957.jpg"
   }
 }

@@ -98,12 +98,15 @@ class AdminCMS {
         // 기존 업로드 존들 초기화
         this.setupDragAndDropForNewZones();
         
+        // 푸터와 SEO 업로드는 setupDragAndDropForNewZones에서 처리됨
+        
         // Earth 배경 이미지 특별 처리
         this.setupEarthImageUpload();
         
         // 채용 공고 필터링 설정
         this.setupCareerFiltering();
     }
+    
     
     // Earth 배경 이미지 업로드 특별 설정
     setupEarthImageUpload() {
@@ -137,40 +140,50 @@ class AdminCMS {
             // 설정 완료 표시
             earthUploadZone.setAttribute('data-earth-setup', 'true');
             
-            // input 변경 이벤트: FileList + 올바른 dropzone 키 사용
-            earthInput.addEventListener('change', (e) => {
+            // 기존 change 이벤트 제거 후 새로 추가 (중복 방지)
+            earthInput.removeEventListener('change', earthInput._changeHandler);
+            earthInput._changeHandler = (e) => {
+                console.log('Earth 배경 이미지 파일 선택 이벤트 발생');
                 const files = e.target.files;
+                console.log('Earth 선택된 파일:', files ? files.length : 'null', '개');
                 if (files && files.length) {
-                    console.log('Earth 배경 이미지 파일 선택됨:', files[0].name);
+                    console.log('Earth 파일명:', files[0].name, '타입:', files[0].type, '크기:', files[0].size);
                     this.handleFileUpload(files, 'vision-earth');
+                } else {
+                    console.log('Earth 선택된 파일이 없습니다');
                 }
-            });
+            };
+            earthInput.addEventListener('change', earthInput._changeHandler);
             
-            // 드래그 앤 드롭 이벤트
-            earthUploadZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                earthUploadZone.classList.add('dragover');
-            });
-            
-            earthUploadZone.addEventListener('dragleave', (e) => {
-                e.preventDefault();
-                if (!earthUploadZone.contains(e.relatedTarget)) {
-                    earthUploadZone.classList.remove('dragover');
+            // 기존 클릭 이벤트 제거 후 새로 추가 (중복 방지)
+            earthUploadZone.removeEventListener('click', earthUploadZone._clickHandler);
+            earthUploadZone._clickHandler = (e) => {
+                // 재진입 가드 (이미 파일 선택 창이 열려있으면 무시)
+                if (earthInput._opening) {
+                    console.log('이미 Earth 배경 이미지 파일 선택 창이 열려있습니다');
+                    return;
                 }
-            });
-            
-            // drop 이벤트: FileList 그대로 전달 + 올바른 dropzone 키
-            earthUploadZone.addEventListener('drop', (e) => {
+                
                 e.preventDefault();
                 e.stopPropagation();
-                earthUploadZone.classList.remove('dragover');
+                console.log('Earth 배경 이미지 업로드 존 클릭됨');
                 
-                const files = e.dataTransfer.files;
-                if (files && files.length) {
-                    console.log('Earth 배경 이미지 드롭됨:', files[0].name);
-                    this.handleFileUpload(files, 'vision-earth');
-                }
-            });
+                earthInput._opening = true;
+                earthInput.click();
+                
+                // 파일 선택 완료 후 가드 해제
+                const resetOpening = () => {
+                    earthInput._opening = false;
+                };
+                
+                // change 이벤트 발생 시 즉시 해제
+                earthInput.addEventListener('change', resetOpening, { once: true });
+                
+                // 사용자가 취소한 경우 대비 (2초 후 안전 해제)
+                setTimeout(resetOpening, 2000);
+            };
+            earthUploadZone.addEventListener('click', earthUploadZone._clickHandler);
+            
             
             // 테스트용 직접 클릭 함수 (전역에서 접근 가능)
             window.testEarthUpload = () => {
@@ -255,6 +268,12 @@ class AdminCMS {
         document.getElementById(`${tabName}-tab`).classList.add('active');
         
         this.currentTab = tabName;
+        
+        // 탭 전환 후 업로드 존 완전 재설정
+        setTimeout(() => {
+            console.log('탭 전환 후 업로드 존 재설정 시작');
+            this.setupDragAndDropForNewZones();
+        }, 100);
     }
     
     // 콘텐츠 로드
@@ -340,29 +359,31 @@ class AdminCMS {
             document.getElementById('seoKeywords').value = (this.content.seo.keywords || []).join(', ');
             this.renderImagePreview('ogImagePreview', this.content.seo.ogImage);
         }
+        
+        // 모든 렌더링이 완료된 후 업로드 존에 이벤트 리스너 설정
+        // (동적으로 생성된 업로드 존들이 DOM에 추가된 이후 실행)
+        setTimeout(() => {
+            this.setupDragAndDropForNewZones();
+        }, 50);
     }
     
     // 이미지 업로드 설정
     setupImageUpload() {
-        // 전역 드래그 이벤트 방지 (브라우저 기본 동작 차단)
+        // 전역 드래그 이벤트 방지 (업로드 존이 아닌 곳에서만 차단)
         document.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-        });
-        
-        document.addEventListener('dragenter', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-        });
-        
-        document.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+            // 업로드 존이 아닌 경우에만 기본 동작 차단
+            if (!e.target.closest('.image-upload-zone')) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
         });
         
         document.addEventListener('drop', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+            // 업로드 존이 아닌 곳에서의 드롭은 차단 (브라우저 기본 동작 방지)
+            if (!e.target.closest('.image-upload-zone')) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
         });
         
         // 초기 드래그 앤 드롭 설정
@@ -371,50 +392,83 @@ class AdminCMS {
     
     // 파일 업로드 처리
     async handleFileUpload(files, dropzone) {
+        console.log('handleFileUpload 호출됨:', { files: files.length, dropzone });
         if (!files.length) return;
         
-        // 비전 섹션은 이미지만 허용
+        // 비전 섹션은 이미지만 허용, 푸터는 SVG도 허용
         const isVisionSection = dropzone.startsWith('vision-');
+        const isFooterSection = dropzone === 'footer-logo';
         const allowedTypes = isVisionSection 
             ? ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+            : isFooterSection
+            ? ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'video/mp4']
             : ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'video/mp4'];
         
+        console.log('허용된 파일 타입:', allowedTypes);
+        
         const validFiles = Array.from(files).filter(file => {
+            console.log('파일 유효성 검사:', { name: file.name, type: file.type, size: file.size });
+            console.log('허용된 타입:', allowedTypes);
+            console.log('타입 매치:', allowedTypes.includes(file.type));
+            
             if (!allowedTypes.includes(file.type)) {
                 const errorMsg = isVisionSection 
                     ? `${file.name}: 비전 섹션은 이미지 파일만 지원합니다 (JPG, PNG, GIF, WebP)`
                     : `${file.name}: 지원하지 않는 파일 형식입니다`;
+                console.error('파일 타입 오류:', errorMsg);
                 this.showToast(errorMsg, 'error');
                 return false;
             }
             if (file.size > 10 * 1024 * 1024) { // 10MB 제한
-                this.showToast(`${file.name}: 파일 크기가 너무 큽니다 (최대 10MB)`, 'error');
+                const sizeErrorMsg = `${file.name}: 파일 크기가 너무 큽니다 (최대 10MB)`;
+                console.error('파일 크기 오류:', sizeErrorMsg);
+                this.showToast(sizeErrorMsg, 'error');
                 return false;
             }
+            console.log('파일 유효성 검사 통과:', file.name);
             return true;
         });
         
-        if (validFiles.length === 0) return;
+        console.log('유효한 파일 개수:', validFiles.length);
+        if (validFiles.length === 0) {
+            console.log('유효한 파일이 없어서 업로드를 중단합니다');
+            return;
+        }
         
         try {
             this.showLoading();
             
             for (const file of validFiles) {
+                console.log('파일 업로드 시작:', { 
+                    name: file.name, 
+                    type: file.type, 
+                    size: file.size, 
+                    dropzone 
+                });
+                
                 const formData = new FormData();
                 formData.append('file', file);
+                
+                console.log('FormData 생성 완료, 서버 요청 시작');
                 
                 const response = await fetch('/api/upload', {
                     method: 'POST',
                     body: formData
                 });
                 
+                console.log('서버 응답 상태:', response.status, response.statusText);
+                
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorText = await response.text();
+                    console.error('서버 오류 응답:', errorText);
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
                 }
                 
                 const result = await response.json();
+                console.log('업로드 응답:', result);
                 
                 if (result.success) {
+                    console.log('업로드 성공, addImageToList 호출:', { dropzone, url: result.url });
                     this.addImageToList(dropzone, result.url);
                     
                     // 콘텐츠 데이터 자동 업데이트
@@ -422,8 +476,16 @@ class AdminCMS {
                     
                     this.showToast(`${file.name} 업로드 성공`, 'success');
                 } else {
+                    console.error('업로드 실패:', result);
                     this.showToast(`${file.name} 업로드 실패: ${result.message || '알 수 없는 오류'}`, 'error');
                 }
+            }
+            
+            // 업로드 완료 후 input 리셋 (동일 파일 재업로드 가능하도록)
+            const uploadZone = document.querySelector(`[data-dropzone="${dropzone}"]`);
+            const input = uploadZone?.querySelector('input[type="file"]');
+            if (input) {
+                input.value = '';
             }
         } catch (error) {
             console.error('업로드 오류:', error);
@@ -435,26 +497,103 @@ class AdminCMS {
     
     // 이미지를 리스트에 추가
     addImageToList(dropzone, url) {
-        const listId = this.getListIdFromDropzone(dropzone);
-        const list = document.getElementById(listId);
+        console.log('addImageToList 호출됨:', { dropzone, url });
         
-        if (list) {
-            const imageItem = this.createImageItem(url);
-            list.appendChild(imageItem);
+        // 개별 아이템의 드롭존인지 확인 (hero-slide-0, business-card-1 등)
+        const isIndividualItem = dropzone.includes('-') && (
+            dropzone.startsWith('hero-slide-') ||
+            dropzone.startsWith('business-card-') ||
+            dropzone.startsWith('media-item-') ||
+            dropzone.startsWith('vision-rolling-')
+        );
+        
+        if (isIndividualItem) {
+            // 개별 아이템의 미리보기 영역 업데이트
+            console.log('개별 아이템 미리보기 업데이트:', dropzone);
+            const uploadZone = document.querySelector(`[data-dropzone="${dropzone}"]`);
+            const previewElement = uploadZone?.closest('.slide-item, .card-item, .accordion-item, .media-item')?.querySelector('.image-preview');
+            
+            if (previewElement) {
+                // 기존 미리보기 제거 후 새 이미지 추가
+                previewElement.innerHTML = '';
+                
+                if (this.isVideoFile(url)) {
+                    // 비디오 파일인 경우
+                    previewElement.innerHTML = `
+                        <video src="${url}" controls class="video-thumbnail" muted>
+                            <source src="${url}" type="video/mp4">
+                            브라우저가 비디오를 지원하지 않습니다.
+                        </video>
+                    `;
+                } else {
+                    // 이미지 파일인 경우
+                    previewElement.innerHTML = `
+                        <img src="${url}" alt="Uploaded image">
+                    `;
+                }
+                console.log('개별 아이템 미리보기 업데이트 완료');
+            } else {
+                console.error('미리보기 요소를 찾을 수 없습니다:', dropzone);
+            }
         } else {
-            // 단일 이미지 미리보기
+            // 정적 드롭존 처리 (footer-logo, og-image, vision-earth 등)
+            console.log('정적 드롭존 미리보기 렌더링:', dropzone);
             const previewId = this.getPreviewIdFromDropzone(dropzone);
             this.renderImagePreview(previewId, url, dropzone);
         }
         
-        // 새로 생성된 업로드 존에 드래그 앤 드롭 설정 적용
-        this.setupDragAndDropForNewZones();
+        // 콘텐츠 데이터 자동 업데이트
+        this.updateContentDataFromUI();
     }
     
     // 새로 생성된 업로드 존에 드래그 앤 드롭 설정
     setupDragAndDropForNewZones() {
-        // 이미 설정된 존은 제외하고 새로 생성된 존만 설정 (Earth 배경 이미지 제외)
-        document.querySelectorAll('.image-upload-zone:not([data-drag-setup]):not([data-dropzone="vision-earth"])').forEach(zone => {
+        console.log('setupDragAndDropForNewZones 시작');
+        
+        // 모든 업로드 존의 기존 이벤트 리스너 완전 제거
+        document.querySelectorAll('.image-upload-zone').forEach(zone => {
+            if (zone.dataset.dropzone === 'vision-earth') {
+                return; // vision-earth는 별도 처리
+            }
+            
+            // 기존 이벤트 리스너 제거
+            if (zone._clickHandler) {
+                zone.removeEventListener('click', zone._clickHandler);
+                zone._clickHandler = null;
+            }
+            
+            // 드래그앤드롭 이벤트 리스너 제거
+            if (zone._dragoverHandler) {
+                zone.removeEventListener('dragover', zone._dragoverHandler);
+                zone._dragoverHandler = null;
+            }
+            
+            if (zone._dragleaveHandler) {
+                zone.removeEventListener('dragleave', zone._dragleaveHandler);
+                zone._dragleaveHandler = null;
+            }
+            
+            if (zone._dropHandler) {
+                zone.removeEventListener('drop', zone._dropHandler);
+                zone._dropHandler = null;
+            }
+            
+            const input = zone.querySelector('input[type="file"]');
+            if (input && input._changeHandler) {
+                input.removeEventListener('change', input._changeHandler);
+                input._changeHandler = null;
+            }
+            
+            // 설정 플래그 제거
+            zone.removeAttribute('data-drag-setup');
+        });
+        
+        // 새로 설정되지 않은 업로드 존만 설정
+        document.querySelectorAll('.image-upload-zone:not([data-drag-setup])').forEach(zone => {
+            if (zone.dataset.dropzone === 'vision-earth') {
+                return; // vision-earth는 별도 처리
+            }
+            
             const input = zone.querySelector('input[type="file"]');
             if (!input) {
                 console.log('업로드 존에서 input을 찾을 수 없습니다:', zone);
@@ -465,99 +604,106 @@ class AdminCMS {
             zone.setAttribute('data-drag-setup', 'true');
             console.log('업로드 존 설정 완료:', zone.dataset.dropzone);
             
-            // 클릭 이벤트 (여러 방식으로 추가)
-            zone.addEventListener('click', (e) => {
+            // 클릭 이벤트 핸들러 생성 및 저장 (zone에만)
+            zone._clickHandler = (e) => {
+                // input 요소를 직접 클릭한 경우는 무시
+                if (e.target === input) {
+                    return;
+                }
+                
+                // 재진입 가드 (이미 파일 선택 창이 열려있으면 무시)
+                if (input._opening) {
+                    console.log('이미 파일 선택 창이 열려있습니다:', zone.dataset.dropzone);
+                    return;
+                }
+                
                 e.preventDefault();
                 e.stopPropagation();
                 console.log('업로드 존 클릭됨:', zone.dataset.dropzone);
-                console.log('input 요소:', input);
-                if (input) {
-                    input.click();
-                    console.log('input.click() 실행됨');
-                } else {
-                    console.error('input 요소를 찾을 수 없습니다');
-                }
-            });
-            
-            // 추가 클릭 이벤트 (mousedown도 추가)
-            zone.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                console.log('업로드 존 mousedown:', zone.dataset.dropzone);
-            });
-            
-            // placeholder 클릭 이벤트도 추가
-            const placeholder = zone.querySelector('.upload-placeholder');
-            if (placeholder) {
-                placeholder.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('placeholder 클릭됨:', zone.dataset.dropzone);
-                    if (input) {
-                        input.click();
-                        console.log('placeholder에서 input.click() 실행됨');
-                    }
-                });
-            }
-            
-            
-            // 드래그 시작
-            zone.addEventListener('dragenter', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                zone.classList.add('dragover');
-                zone.style.borderColor = '#007bff';
-                zone.style.backgroundColor = 'rgba(0, 123, 255, 0.1)';
-            });
-            
-            // 드래그 오버
-            zone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                zone.classList.add('dragover');
-            });
-            
-            // 드래그 리브
-            zone.addEventListener('dragleave', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (!zone.contains(e.relatedTarget)) {
-                    zone.classList.remove('dragover');
-                    zone.style.borderColor = '';
-                    zone.style.backgroundColor = '';
-                }
-            });
-            
-            // 드롭
-            zone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                zone.classList.remove('dragover');
-                zone.style.borderColor = '';
-                zone.style.backgroundColor = '';
                 
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    this.handleFileUpload(files, zone.dataset.dropzone);
-                }
-            });
+                input._opening = true;
+                input.click();
+                
+                // 파일 선택 완료 후 가드 해제
+                const resetOpening = () => {
+                    input._opening = false;
+                };
+                
+                // change 이벤트 발생 시 즉시 해제
+                input.addEventListener('change', resetOpening, { once: true });
+                
+                // 사용자가 취소한 경우 대비 (2초 후 안전 해제)
+                setTimeout(resetOpening, 2000);
+            };
             
-            // 파일 선택
-            input.addEventListener('change', (e) => {
+            // change 이벤트 핸들러 생성 및 저장
+            input._changeHandler = (e) => {
+                console.log('파일 선택 이벤트 발생:', zone.dataset.dropzone);
                 const files = e.target.files;
                 if (files.length > 0) {
                     this.handleFileUpload(files, zone.dataset.dropzone);
                 }
-            });
+            };
+            
+            // 드래그앤드롭 이벤트 핸들러 생성 및 저장
+            zone._dragoverHandler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                zone.classList.add('drag-over');
+            };
+            
+            zone._dragleaveHandler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                zone.classList.remove('drag-over');
+            };
+            
+            zone._dropHandler = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                zone.classList.remove('drag-over');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    console.log('드롭된 파일:', files, '드롭존:', zone.dataset.dropzone);
+                    this.handleFileUpload(files, zone.dataset.dropzone);
+                }
+            };
+            
+            // 이벤트 리스너 등록
+            zone.addEventListener('click', zone._clickHandler);
+            zone.addEventListener('dragover', zone._dragoverHandler);
+            zone.addEventListener('dragleave', zone._dragleaveHandler);
+            zone.addEventListener('drop', zone._dropHandler);
+            input.addEventListener('change', input._changeHandler);
         });
+        
+        console.log('setupDragAndDropForNewZones 완료');
     }
     
     // 드롭존에서 리스트 ID 가져오기
     getListIdFromDropzone(dropzone) {
+        console.log('getListIdFromDropzone 호출됨:', dropzone);
+        
+        // 동적 드롭존 처리 (예: hero-slide-0, business-card-1 등)
+        if (dropzone.startsWith('hero-slide-')) {
+            return 'heroSlidesList';
+        }
+        if (dropzone.startsWith('business-card-')) {
+            return 'businessCardsList';
+        }
+        if (dropzone.startsWith('media-item-')) {
+            return 'mediaItemsList';
+        }
+        if (dropzone.startsWith('vision-rolling-')) {
+            return 'visionRollingItemsList';
+        }
+        
         const mapping = {
-            'hero-bg': 'heroBgList',
-            'vision-rolling': 'visionRollingList'
+            // 정적 드롭존들
         };
-        return mapping[dropzone] || '';
+        const result = mapping[dropzone] || '';
+        console.log('매핑 결과:', result);
+        return result;
     }
     
     // 드롭존에서 미리보기 ID 가져오기
@@ -612,7 +758,12 @@ class AdminCMS {
     // 이미지 미리보기 렌더링
     renderImagePreview(previewId, url, dropzone = null) {
         const preview = document.getElementById(previewId);
-        if (!preview || !url) return;
+        if (!preview) return;
+        
+        // 기존 미리보기 완전히 제거
+        preview.innerHTML = '';
+        
+        if (!url) return;
         
         // 비디오 파일인지 확인
         const isVideo = this.isVideoFile(url);
@@ -794,6 +945,11 @@ class AdminCMS {
             });
         }
         this.updateHeroSlideButtons();
+        
+        // 렌더링 완료 후 업로드 존에 이벤트 리스너 설정
+        setTimeout(() => {
+            this.setupDragAndDropForNewZones();
+        }, 0);
     }
     
     // 히어로 슬라이드 생성
@@ -830,9 +986,9 @@ class AdminCMS {
                 <label>배경 이미지</label>
                 <div class="image-upload-zone" data-dropzone="hero-slide-${index}">
                     <div class="upload-placeholder">
-                        <p>배경 이미지를 드래그하거나 클릭하여 업로드</p>
+                        <p>여기에 파일을 드래그하거나 클릭하여 업로드</p>
                         <p class="file-info">지원 형식: JPG, PNG, GIF, WebP, MP4 | 최대 10MB</p>
-                        <input type="file" accept="image/*,video/mp4" hidden>
+                        <input type="file" accept="image/*,video/mp4" class="file-input-hidden">
                     </div>
                 </div>
                 <div class="image-preview">
@@ -853,7 +1009,7 @@ class AdminCMS {
         const input = uploadZone.querySelector('input[type="file"]');
         const preview = slideElement.querySelector('.image-preview');
         
-        uploadZone.addEventListener('click', () => input.click());
+        // 클릭 핸들러는 setupDragAndDropForNewZones()에서 전역으로 처리
         input.addEventListener('change', (e) => {
             this.handleSlideImageUpload(e.target.files[0], preview);
         });
@@ -895,27 +1051,24 @@ class AdminCMS {
             const result = await response.json();
             
             if (result.success) {
-                // 파일 타입에 따라 분기 처리
-                const url = result.url;
-                if (this.isVideoFile(url)) {
-                    // 비디오 파일인 경우 비디오 태그로 표시
-                    previewElement.innerHTML = `
-                        <video src="${url}" controls class="video-thumbnail" muted>
-                            <source src="${url}" type="video/mp4">
-                            브라우저가 비디오를 지원하지 않습니다.
-                        </video>
-                    `;
+                // 업로드 존을 찾아서 dropzone 값 가져오기
+                const uploadZone = previewElement.closest('.slide-item')?.querySelector('.image-upload-zone');
+                const dropzone = uploadZone?.dataset.dropzone;
+                
+                if (dropzone) {
+                    // addImageToList 함수를 사용해서 일관성 있게 처리
+                    this.addImageToList(dropzone, result.url);
                 } else {
-                    // 이미지 파일인 경우
-                    previewElement.innerHTML = `
-                        <img src="${url}" alt="Slide image">
-                    `;
+                    console.error('dropzone을 찾을 수 없습니다');
                 }
                 
-                // 콘텐츠 데이터 자동 업데이트
-                this.updateContentDataFromUI();
-                
                 this.showToast('이미지 업로드 성공', 'success');
+                
+                // 업로드 완료 후 input 리셋 (동일 파일 재업로드 가능하도록)
+                const input = uploadZone?.querySelector('input[type="file"]');
+                if (input) {
+                    input.value = '';
+                }
             } else {
                 this.showToast('이미지 업로드 실패', 'error');
             }
@@ -1045,6 +1198,11 @@ class AdminCMS {
             });
         }
         this.updateVisionRollingButtons();
+        
+        // 렌더링 완료 후 업로드 존에 이벤트 리스너 설정
+        setTimeout(() => {
+            this.setupDragAndDropForNewZones();
+        }, 0);
     }
     
     // 비전 롤링 이미지 아이템 생성
@@ -1064,9 +1222,9 @@ class AdminCMS {
                 <label>이미지</label>
                 <div class="image-upload-zone" data-dropzone="vision-rolling-${index}">
                     <div class="upload-placeholder">
-                        <p>이미지를 드래그하거나 클릭하여 업로드</p>
+                        <p>여기에 파일을 드래그하거나 클릭하여 업로드</p>
                         <p class="file-info">지원 형식: JPG, PNG, GIF, WebP | 최대 10MB</p>
-                        <input type="file" accept="image/*" hidden>
+                        <input type="file" accept="image/*" class="file-input-hidden">
                     </div>
                 </div>
                 <div class="image-preview">
@@ -1079,7 +1237,7 @@ class AdminCMS {
         const input = uploadZone.querySelector('input[type="file"]');
         const preview = itemElement.querySelector('.image-preview');
         
-        uploadZone.addEventListener('click', () => input.click());
+        // 클릭 핸들러는 setupDragAndDropForNewZones()에서 전역으로 처리
         input.addEventListener('change', (e) => {
             this.handleVisionRollingImageUpload(e.target.files[0], preview);
         });
@@ -1121,27 +1279,24 @@ class AdminCMS {
             const result = await response.json();
             
             if (result.success) {
-                // 파일 타입에 따라 분기 처리
-                const url = result.url;
-                if (this.isVideoFile(url)) {
-                    // 비디오 파일인 경우 비디오 태그로 표시 (삭제 버튼 없음)
-                    previewElement.innerHTML = `
-                        <video src="${url}" controls class="video-thumbnail" muted>
-                            <source src="${url}" type="video/mp4">
-                            브라우저가 비디오를 지원하지 않습니다.
-                        </video>
-                    `;
+                // 업로드 존을 찾아서 dropzone 값 가져오기
+                const uploadZone = previewElement.closest('.media-item')?.querySelector('.image-upload-zone');
+                const dropzone = uploadZone?.dataset.dropzone;
+                
+                if (dropzone) {
+                    // addImageToList 함수를 사용해서 일관성 있게 처리
+                    this.addImageToList(dropzone, result.url);
                 } else {
-                    // 이미지 파일인 경우 (삭제 버튼 없음)
-                    previewElement.innerHTML = `
-                        <img src="${url}" alt="Vision Rolling image">
-                    `;
+                    console.error('dropzone을 찾을 수 없습니다');
                 }
                 
-                // 콘텐츠 데이터 자동 업데이트
-                this.updateContentDataFromUI();
-                
                 this.showToast('이미지 업로드 성공', 'success');
+                
+                // 업로드 완료 후 input 리셋 (동일 파일 재업로드 가능하도록)
+                const input = uploadZone?.querySelector('input[type="file"]');
+                if (input) {
+                    input.value = '';
+                }
             } else {
                 this.showToast('이미지 업로드 실패', 'error');
             }
@@ -1205,6 +1360,11 @@ class AdminCMS {
             list.appendChild(cardElement);
         });
         this.updateBusinessCardButtons();
+        
+        // 렌더링 완료 후 업로드 존에 이벤트 리스너 설정
+        setTimeout(() => {
+            this.setupDragAndDropForNewZones();
+        }, 0);
     }
     
     // 비즈니스 카드 생성
@@ -1233,9 +1393,9 @@ class AdminCMS {
                 <label>이미지</label>
                 <div class="image-upload-zone" data-dropzone="business-card-${index}">
                     <div class="upload-placeholder">
-                        <p>이미지를 드래그하거나 클릭하여 업로드</p>
+                        <p>여기에 파일을 드래그하거나 클릭하여 업로드</p>
                         <p class="file-info">지원 형식: JPG, PNG, GIF, WebP, MP4 | 최대 10MB</p>
-                        <input type="file" accept="image/*,video/mp4" hidden>
+                        <input type="file" accept="image/*,video/mp4" class="file-input-hidden">
                     </div>
                 </div>
                 <div class="image-preview">
@@ -1261,7 +1421,7 @@ class AdminCMS {
         const input = uploadZone.querySelector('input[type="file"]');
         const preview = cardElement.querySelector('.image-preview');
         
-        uploadZone.addEventListener('click', () => input.click());
+        // 클릭 핸들러는 setupDragAndDropForNewZones()에서 전역으로 처리
         input.addEventListener('change', (e) => {
             this.handleBusinessCardImageUpload(e.target.files[0], preview);
         });
@@ -1287,27 +1447,24 @@ class AdminCMS {
             const result = await response.json();
             
             if (result.success) {
-                // 파일 타입에 따라 분기 처리
-                const url = result.url;
-                if (this.isVideoFile(url)) {
-                    // 비디오 파일인 경우 비디오 태그로 표시
-                    previewElement.innerHTML = `
-                        <video src="${url}" controls class="video-thumbnail" muted>
-                            <source src="${url}" type="video/mp4">
-                            브라우저가 비디오를 지원하지 않습니다.
-                        </video>
-                    `;
+                // 업로드 존을 찾아서 dropzone 값 가져오기
+                const uploadZone = previewElement.closest('.card-item')?.querySelector('.image-upload-zone');
+                const dropzone = uploadZone?.dataset.dropzone;
+                
+                if (dropzone) {
+                    // addImageToList 함수를 사용해서 일관성 있게 처리
+                    this.addImageToList(dropzone, result.url);
                 } else {
-                    // 이미지 파일인 경우
-                    previewElement.innerHTML = `
-                        <img src="${url}" alt="Business Card image">
-                    `;
+                    console.error('dropzone을 찾을 수 없습니다');
                 }
                 
-                // 콘텐츠 데이터 자동 업데이트
-                this.updateContentDataFromUI();
-                
                 this.showToast('이미지 업로드 성공', 'success');
+                
+                // 업로드 완료 후 input 리셋 (동일 파일 재업로드 가능하도록)
+                const input = uploadZone?.querySelector('input[type="file"]');
+                if (input) {
+                    input.value = '';
+                }
             } else {
                 this.showToast('이미지 업로드 실패', 'error');
             }
@@ -1440,6 +1597,11 @@ class AdminCMS {
             const itemElement = this.createMediaItem(item, index);
             list.appendChild(itemElement);
         });
+        
+        // 렌더링 완료 후 업로드 존에 이벤트 리스너 설정
+        setTimeout(() => {
+            this.setupDragAndDropForNewZones();
+        }, 0);
     }
     
     // 미디어 아이템 생성 (아코디언 UI)
@@ -1461,9 +1623,9 @@ class AdminCMS {
                     <label>이미지/비디오</label>
                     <div class="image-upload-zone" data-dropzone="media-item-${index}">
                         <div class="upload-placeholder">
-                            <p>이미지 또는 비디오를 드래그하거나 클릭하여 업로드</p>
+                            <p>여기에 파일을 드래그하거나 클릭하여 업로드</p>
                             <p class="file-info">지원 형식: JPG, PNG, GIF, WebP, MP4 | 최대 10MB</p>
-                            <input type="file" accept="image/*,video/mp4" hidden>
+                            <input type="file" accept="image/*,video/mp4" class="file-input-hidden">
                         </div>
                     </div>
                     <div class="image-preview">
@@ -1493,7 +1655,7 @@ class AdminCMS {
         const input = uploadZone.querySelector('input[type="file"]');
         const preview = itemElement.querySelector('.image-preview');
         
-        uploadZone.addEventListener('click', () => input.click());
+        // 클릭 핸들러는 setupDragAndDropForNewZones()에서 전역으로 처리
         input.addEventListener('change', (e) => {
             this.handleMediaItemImageUpload(e.target.files[0], preview);
         });
@@ -1535,27 +1697,24 @@ class AdminCMS {
             const result = await response.json();
             
             if (result.success) {
-                // 파일 타입에 따라 분기 처리
-                const url = result.url;
-                if (this.isVideoFile(url)) {
-                    // 비디오 파일인 경우 비디오 태그로 표시
-                    previewElement.innerHTML = `
-                        <video src="${url}" controls class="video-thumbnail" muted>
-                            <source src="${url}" type="video/mp4">
-                            브라우저가 비디오를 지원하지 않습니다.
-                        </video>
-                    `;
+                // 업로드 존을 찾아서 dropzone 값 가져오기
+                const uploadZone = previewElement.closest('.accordion-item')?.querySelector('.image-upload-zone');
+                const dropzone = uploadZone?.dataset.dropzone;
+                
+                if (dropzone) {
+                    // addImageToList 함수를 사용해서 일관성 있게 처리
+                    this.addImageToList(dropzone, result.url);
                 } else {
-                    // 이미지 파일인 경우
-                    previewElement.innerHTML = `
-                        <img src="${url}" alt="Media Item image">
-                    `;
+                    console.error('dropzone을 찾을 수 없습니다');
                 }
                 
-                // 콘텐츠 데이터 자동 업데이트
-                this.updateContentDataFromUI();
-                
                 this.showToast('이미지 업로드 성공', 'success');
+                
+                // 업로드 완료 후 input 리셋 (동일 파일 재업로드 가능하도록)
+                const input = uploadZone?.querySelector('input[type="file"]');
+                if (input) {
+                    input.value = '';
+                }
             } else {
                 this.showToast('이미지 업로드 실패', 'error');
             }
@@ -1657,6 +1816,10 @@ class AdminCMS {
             }, list.children.length);
             list.appendChild(newSlide);
             this.updateHeroSlideButtons();
+            // 새로 추가된 업로드 존에 이벤트 리스너 설정
+            setTimeout(() => {
+                this.setupDragAndDropForNewZones();
+            }, 50);
         });
         
         // 비즈니스 카드 추가
@@ -1669,6 +1832,10 @@ class AdminCMS {
             const newCard = this.createBusinessCard({}, list.children.length);
             list.appendChild(newCard);
             this.updateBusinessCardButtons();
+            // 새로 추가된 업로드 존에 이벤트 리스너 설정
+            setTimeout(() => {
+                this.setupDragAndDropForNewZones();
+            }, 50);
         });
         
         // 비전 롤링 이미지 추가
@@ -1681,6 +1848,10 @@ class AdminCMS {
             const newItem = this.createVisionRollingItem('', list.children.length);
             list.appendChild(newItem);
             this.updateVisionRollingButtons();
+            // 새로 추가된 업로드 존에 이벤트 리스너 설정
+            setTimeout(() => {
+                this.setupDragAndDropForNewZones();
+            }, 50);
         });
         
         // 미디어 아이템 추가
@@ -1688,6 +1859,10 @@ class AdminCMS {
             const list = document.getElementById('mediaItemsList');
             const newItem = this.createMediaItem({}, list.children.length);
             list.appendChild(newItem);
+            // 새로 추가된 업로드 존에 이벤트 리스너 설정
+            setTimeout(() => {
+                this.setupDragAndDropForNewZones();
+            }, 50);
         });
         
         // 채용 공고 추가

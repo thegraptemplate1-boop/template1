@@ -1085,3 +1085,21 @@ body {
     transform: scale(1.02);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+
+/* 파일 input 완전 숨김 처리 (클릭 호환성 보장) */
+.file-input-hidden {
+    position: absolute;
+    left: -9999px;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+/* 드래그오버 상태 시각적 피드백 */
+.image-upload-zone.drag-over {
+    background-color: #f0f8ff;
+    border-color: #0201AD;
+    border-style: dashed;
+    transform: scale(1.02);
+}

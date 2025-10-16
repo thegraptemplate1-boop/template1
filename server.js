@@ -104,18 +104,25 @@ async function optimizeVideo(inputPath, outputPath, options = {}) {
   const {
     width = 1920,
     height = 1080,
-    bitrate = '2M',
+    bitrate = '2000k',
     fps = 30
   } = options;
 
   return new Promise((resolve, reject) => {
+    // 출력 디렉토리 생성
+    fs.ensureDirSync(path.dirname(outputPath));
+    
     ffmpeg(inputPath)
-      .size(`${width}x${height}`)
       .videoBitrate(bitrate)
       .fps(fps)
-      .format('mp4')
       .videoCodec('libx264')
       .audioCodec('aac')
+      .size(`${width}x${height}`)
+      .format('mp4')
+      .outputOptions(['-preset', 'fast'])
+      .on('start', (commandLine) => {
+        console.log('FFmpeg 명령어:', commandLine);
+      })
       .on('end', () => {
         console.log(`비디오 최적화 완료: ${outputPath}`);
         resolve(outputPath);
@@ -166,6 +173,27 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // 정적 파일 서빙
 app.use(express.static(__dirname));
 
+// content.json 파일을 정적 파일로 서빙
+app.get('/content.json', async (req, res) => {
+    try {
+        if (await fs.pathExists(CONTENT_FILE)) {
+            const content = await fs.readJson(CONTENT_FILE);
+            res.json(content);
+        } else {
+            res.status(404).json({ 
+                success: false, 
+                error: '콘텐츠 파일을 찾을 수 없습니다' 
+            });
+        }
+    } catch (error) {
+        console.error('콘텐츠 로드 오류:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: '콘텐츠 로드 중 오류가 발생했습니다' 
+        });
+    }
+});
+
 // 업로드 파일 서빙 (CORS 헤더 추가)
 app.use('/uploads', (req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
@@ -190,7 +218,10 @@ const storage = multer.diskStorage({
     },
     filename: (req, file, cb) => {
         const ext = path.extname(file.originalname);
-        const name = Date.now() + '-' + Math.random().toString(36).slice(2) + ext;
+        // 파일명에 완전히 안전한 문자만 사용 (숫자와 하이픈만)
+        const timestamp = Date.now();
+        const randomNum = Math.floor(Math.random() * 10000);
+        const name = timestamp + '-' + randomNum + ext;
         cb(null, name);
     }
 });
@@ -202,11 +233,11 @@ const upload = multer({
         files: 10
     },
     fileFilter: (req, file, cb) => {
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4'];
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml', 'video/mp4'];
         if (allowedTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {
-            cb(new Error('지원하지 않는 파일 형식입니다. JPEG, PNG, WebP, GIF, MP4만 허용됩니다.'));
+            cb(new Error('지원하지 않는 파일 형식입니다. JPEG, PNG, WebP, GIF, SVG, MP4만 허용됩니다.'));
         }
     }
 });

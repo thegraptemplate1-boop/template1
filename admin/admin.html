@@ -103,13 +103,13 @@
 
                 <div class="form-section">
                     <h3>Earth 배경 이미지</h3>
-                    <div class="image-upload-zone" data-dropzone="vision-earth">
-                        <div class="upload-placeholder">
-                            <p>Earth 배경 이미지를 드래그하거나 클릭하여 업로드</p>
-                            <p class="file-info">지원 형식: JPG, PNG, GIF, WebP | 최대 10MB</p>
-                            <input type="file" id="visionEarthUpload" accept="image/*" class="file-input-overlay">
-                        </div>
+                <div class="image-upload-zone" data-dropzone="vision-earth">
+                    <div class="upload-placeholder">
+                        <p>여기에 파일을 드래그하거나 클릭하여 업로드</p>
+                        <p class="file-info">지원 형식: JPG, PNG, GIF, WebP | 최대 10MB</p>
+                        <input type="file" id="visionEarthUpload" accept="image/*" class="file-input-hidden">
                     </div>
+                </div>
                     <div id="visionEarthPreview" class="image-preview"></div>
                 </div>
             </section>
@@ -128,7 +128,7 @@
                         <textarea id="businessSubtitle" rows="3" placeholder="드론 · AI · 원격관제 클라우드를 통해<br>인프라의 생산성과 안전성을 동시에 높입니다."></textarea>
                     </div>
                     <div class="form-group">
-                        <label for="businessMoreButton">더보기 버튼 텍스트</label>
+                        <label for="businessMoreButton">버튼 텍스트</label>
                         <input type="text" id="businessMoreButton" placeholder="사업분야 더보기">
                     </div>
                 </div>
@@ -249,9 +249,9 @@
                     <h3>로고 이미지</h3>
                     <div class="image-upload-zone" data-dropzone="footer-logo">
                         <div class="upload-placeholder">
-                            <p>로고 이미지를 드래그하거나 클릭하여 업로드</p>
-                            <p class="file-info">지원 형식: JPG, PNG, GIF, WebP, MP4 | 최대 10MB</p>
-                            <input type="file" id="footerLogoUpload" accept="image/*,video/mp4" hidden>
+                            <p>여기에 파일을 드래그하거나 클릭하여 업로드</p>
+                            <p class="file-info">지원 형식: JPG, PNG, GIF, WebP, SVG, MP4 | 최대 10MB</p>
+                            <input type="file" id="footerLogoUpload" accept="image/*,video/mp4,.svg" class="file-input-hidden">
                         </div>
                     </div>
                     <div id="footerLogoPreview" class="image-preview"></div>
@@ -307,9 +307,9 @@
                         <label for="ogImage">Open Graph 이미지</label>
                         <div class="image-upload-zone" data-dropzone="og-image">
                             <div class="upload-placeholder">
-                                <p>소셜 미디어 공유용 이미지를 드래그하거나 클릭하여 업로드</p>
+                                <p>여기에 파일을 드래그하거나 클릭하여 업로드</p>
                                 <p class="file-info">지원 형식: JPG, PNG, GIF, WebP, MP4 | 최대 10MB</p>
-                                <input type="file" id="ogImageUpload" accept="image/*,video/mp4" hidden>
+                                <input type="file" id="ogImageUpload" accept="image/*,video/mp4" class="file-input-hidden">
                             </div>
                         </div>
                         <div id="ogImagePreview" class="image-preview"></div>
