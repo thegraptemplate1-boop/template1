@@ -1,7 +1,7 @@
 {
   "meta": {
     "version": "1.0.0",
-    "lastModified": "2025-10-17T07:23:42.785Z",
+    "lastModified": "2025-10-17T07:33:17.060Z",
     "modifiedBy": "admin",
     "backup": {
       "auto": true,
@@ -57,8 +57,8 @@
     "title": "하늘의 데이터를 모두에게 사랑해요!",
     "subtitle": "누구나 신뢰할 수 있는 드론 데이터와 개방형 플랫폼으로 의사결정을 바꿉니다.",
     "rollingImages": [
-      "http://localhost:3000/uploads/optimized/1760323182073-6859.jpg",
-      "http://localhost:3000/uploads/optimized/1758257120461-i9i77rpwxxo.jpg",
+      "https://vercel.pilloment.com/uploads/1760686377472-rolling-1.jpg",
+      "https://vercel.pilloment.com/uploads/1760686393067-rolling-3.jpg",
       "http://localhost:3000/uploads/optimized/1758257126417-i664wa4cp28.jpg",
       "http://localhost:3000/uploads/optimized/1758257132019-6r2kjj509gc.jpg",
       "http://localhost:3000/uploads/optimized/1758257138263-elz6ej3bp25.jpg"
