@@ -1,7 +1,7 @@
 {
   "meta": {
     "version": "1.0.0",
-    "lastModified": "2025-10-17T07:34:55.259Z",
+    "lastModified": "2025-10-17T07:36:25.663Z",
     "modifiedBy": "admin",
     "backup": {
       "auto": true,
@@ -63,7 +63,7 @@
       "https://vercel.pilloment.com/uploads/1760686474847-business_area-4.jpg",
       "https://vercel.pilloment.com/uploads/1760686492412-business_area-1.jpg"
     ],
-    "backgroundImage": "http://localhost:3000/uploads/optimized/1759389056222-6092.jpg"
+    "backgroundImage": "https://vercel.pilloment.com/uploads/1760686582750-media-2.jpg"
   },
   "business": {
     "subtitleHtml": "드론 · AI · 원격관제 클라우드를 통해<br>인프라의 생산성과 안전성을 동시에 높입니다. 몰랐지?",
