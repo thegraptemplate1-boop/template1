@@ -1,7 +1,7 @@
 {
   "meta": {
     "version": "1.0.0",
-    "lastModified": "2025-10-17T07:33:17.060Z",
+    "lastModified": "2025-10-17T07:34:55.259Z",
     "modifiedBy": "admin",
     "backup": {
       "auto": true,
@@ -59,9 +59,9 @@
     "rollingImages": [
       "https://vercel.pilloment.com/uploads/1760686377472-rolling-1.jpg",
       "https://vercel.pilloment.com/uploads/1760686393067-rolling-3.jpg",
-      "http://localhost:3000/uploads/optimized/1758257126417-i664wa4cp28.jpg",
-      "http://localhost:3000/uploads/optimized/1758257132019-6r2kjj509gc.jpg",
-      "http://localhost:3000/uploads/optimized/1758257138263-elz6ej3bp25.jpg"
+      "https://vercel.pilloment.com/uploads/1760686453731-rolling-4.jpg",
+      "https://vercel.pilloment.com/uploads/1760686474847-business_area-4.jpg",
+      "https://vercel.pilloment.com/uploads/1760686492412-business_area-1.jpg"
     ],
     "backgroundImage": "http://localhost:3000/uploads/optimized/1759389056222-6092.jpg"
   },
