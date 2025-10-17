@@ -2444,3 +2444,13 @@ window.addEventListener('message', (event) => {
         }
     }
 });
+
+// 파일을 base64 문자열로 변환하는 도우미 함수
+async function fileToBase64(file) {
+  const buf = await file.arrayBuffer();
+  let binary = '';
+  const bytes = new Uint8Array(buf);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
