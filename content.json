@@ -1,7 +1,7 @@
 {
   "meta": {
     "version": "1.0.0",
-    "lastModified": "2025-10-17T07:36:25.663Z",
+    "lastModified": "2025-10-17T07:39:49.170Z",
     "modifiedBy": "admin",
     "backup": {
       "auto": true,
@@ -70,25 +70,25 @@
     "moreButtonText": "사업분야 더 볼래?",
     "cards": [
       {
-        "image": "http://localhost:3000/uploads/optimized/1758158418258-wsc9693c1ra.jpg",
+        "image": "https://vercel.pilloment.com/uploads/1760686693442-business_area-4.jpg",
         "title": "바다 좋아!!!!👍",
         "desc": "나만 좋니?",
         "link": ""
       },
       {
-        "image": "http://localhost:3000/uploads/optimized/1758157937560-pqgll7mvjd.jpg",
+        "image": "https://vercel.pilloment.com/uploads/1760686729081-business_area-1.jpg",
         "title": "도시 계획이닷! 맞아?",
         "desc": "멋진 도시를 만들어봅시다",
         "link": ""
       },
       {
-        "image": "http://localhost:3000/uploads/optimized/1759137054663-2r7v89ydn02.jpg",
+        "image": "https://vercel.pilloment.com/uploads/1760686748618-business_area-2.jpg",
         "title": "55555",
         "desc": "5656565656565",
         "link": ""
       },
       {
-        "image": "http://localhost:3000/uploads/optimized/1758187788863-u1xqgfrr7yo.jpg",
+        "image": "https://vercel.pilloment.com/uploads/1760686782779-business_area-5.jpg",
         "title": "3333333333",
         "desc": "333333",
         "link": ""
