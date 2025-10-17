@@ -1,7 +1,7 @@
 {
   "meta": {
     "version": "1.0.0",
-    "lastModified": "2025-10-17T07:18:39.501Z",
+    "lastModified": "2025-10-17T07:23:42.785Z",
     "modifiedBy": "admin",
     "backup": {
       "auto": true,
@@ -23,7 +23,7 @@
         "id": "hero-2",
         "title": "1",
         "subtitle": "1111😄👎🏻👩🏻‍💻",
-        "background": "http://localhost:3000/uploads/optimized/1759379683801-4ledq9cms16.jpg",
+        "background": "https://vercel.pilloment.com/uploads/1760685580564-hero_Image-2.jpg",
         "active": true,
         "order": 2
       },
@@ -31,7 +31,7 @@
         "id": "hero-3",
         "title": "333333",
         "subtitle": "33333333",
-        "background": "http://localhost:3000/uploads/optimized/1760323818159-8045.jpg",
+        "background": "https://vercel.pilloment.com/uploads/1760685616831-hero_Image-4.jpg",
         "active": true,
         "order": 3
       },
@@ -42,6 +42,14 @@
         "background": "http://localhost:3000/uploads/optimized/1759380238282-5883.mp4",
         "active": true,
         "order": 4
+      },
+      {
+        "id": "hero-5",
+        "title": "추가도 되나?",
+        "subtitle": "",
+        "background": "https://vercel.pilloment.com/uploads/1760685817738-File-KakaoTalk_Video_2021-08-20-17-01-59.mp4",
+        "active": true,
+        "order": 5
       }
     ]
   },
