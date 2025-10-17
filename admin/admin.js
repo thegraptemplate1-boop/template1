@@ -391,109 +391,82 @@ class AdminCMS {
     }
     
     // 파일 업로드 처리
-    async handleFileUpload(files, dropzone) {
-        console.log('handleFileUpload 호출됨:', { files: files.length, dropzone });
-        if (!files.length) return;
-        
-        // 비전 섹션은 이미지만 허용, 푸터는 SVG도 허용
-        const isVisionSection = dropzone.startsWith('vision-');
-        const isFooterSection = dropzone === 'footer-logo';
-        const allowedTypes = isVisionSection 
-            ? ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
-            : isFooterSection
-            ? ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'video/mp4']
-            : ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'video/mp4'];
-        
-        console.log('허용된 파일 타입:', allowedTypes);
-        
-        const validFiles = Array.from(files).filter(file => {
-            console.log('파일 유효성 검사:', { name: file.name, type: file.type, size: file.size });
-            console.log('허용된 타입:', allowedTypes);
-            console.log('타입 매치:', allowedTypes.includes(file.type));
-            
-            if (!allowedTypes.includes(file.type)) {
-                const errorMsg = isVisionSection 
-                    ? `${file.name}: 비전 섹션은 이미지 파일만 지원합니다 (JPG, PNG, GIF, WebP)`
-                    : `${file.name}: 지원하지 않는 파일 형식입니다`;
-                console.error('파일 타입 오류:', errorMsg);
-                this.showToast(errorMsg, 'error');
-                return false;
-            }
-            if (file.size > 10 * 1024 * 1024) { // 10MB 제한
-                const sizeErrorMsg = `${file.name}: 파일 크기가 너무 큽니다 (최대 10MB)`;
-                console.error('파일 크기 오류:', sizeErrorMsg);
-                this.showToast(sizeErrorMsg, 'error');
-                return false;
-            }
-            console.log('파일 유효성 검사 통과:', file.name);
-            return true;
-        });
-        
-        console.log('유효한 파일 개수:', validFiles.length);
-        if (validFiles.length === 0) {
-            console.log('유효한 파일이 없어서 업로드를 중단합니다');
-            return;
+// 파일 업로드 처리 (JSON + base64)
+async handleFileUpload(files, dropzone) {
+    console.log('handleFileUpload 호출됨:', { files: files.length, dropzone });
+    if (!files.length) return;
+
+    const isVisionSection = dropzone.startsWith('vision-');
+    const isFooterSection = dropzone === 'footer-logo';
+    const allowedTypes = isVisionSection
+        ? ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+        : isFooterSection
+        ? ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'video/mp4']
+        : ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'video/mp4'];
+
+    const validFiles = Array.from(files).filter(file => {
+        if (!allowedTypes.includes(file.type)) {
+            this.showToast(
+              isVisionSection
+                ? `${file.name}: 비전 섹션은 이미지 파일만 지원합니다 (JPG, PNG, GIF, WebP)`
+                : `${file.name}: 지원하지 않는 파일 형식입니다`,
+              'error'
+            );
+            return false;
         }
-        
-        try {
-            this.showLoading();
-            
-            for (const file of validFiles) {
-                console.log('파일 업로드 시작:', { 
-                    name: file.name, 
-                    type: file.type, 
-                    size: file.size, 
-                    dropzone 
-                });
-                
-                const formData = new FormData();
-                formData.append('file', file);
-                
-                console.log('FormData 생성 완료, 서버 요청 시작');
-                
-                const response = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                console.log('서버 응답 상태:', response.status, response.statusText);
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('서버 오류 응답:', errorText);
-                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-                }
-                
-                const result = await response.json();
-                console.log('업로드 응답:', result);
-                
-                if (result.success) {
-                    console.log('업로드 성공, addImageToList 호출:', { dropzone, url: result.url });
-                    this.addImageToList(dropzone, result.url);
-                    
-                    // 콘텐츠 데이터 자동 업데이트
-                    this.updateContentDataFromUI();
-                    
-                    this.showToast(`${file.name} 업로드 성공`, 'success');
-                } else {
-                    console.error('업로드 실패:', result);
-                    this.showToast(`${file.name} 업로드 실패: ${result.message || '알 수 없는 오류'}`, 'error');
-                }
-            }
-            
-            // 업로드 완료 후 input 리셋 (동일 파일 재업로드 가능하도록)
-            const uploadZone = document.querySelector(`[data-dropzone="${dropzone}"]`);
-            const input = uploadZone?.querySelector('input[type="file"]');
-            if (input) {
-                input.value = '';
-            }
-        } catch (error) {
-            console.error('업로드 오류:', error);
-            this.showToast('업로드 중 오류가 발생했습니다: ' + error.message, 'error');
-        } finally {
-            this.hideLoading();
+        if (file.size > 10 * 1024 * 1024) {
+            this.showToast(`${file.name}: 파일 크기가 너무 큽니다 (최대 10MB)`, 'error');
+            return false;
         }
+        return true;
+    });
+    if (!validFiles.length) return;
+
+    try {
+        this.showLoading();
+
+        for (const file of validFiles) {
+            // 🔄 base64 인코딩
+            const b64 = await fileToBase64(file);
+
+            // 🔗 JSON 업로드
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: file.name,
+                    type: file.type,
+                    data: b64
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.addImageToList(dropzone, result.url);
+                this.updateContentDataFromUI();
+                this.showToast(`${file.name} 업로드 성공`, 'success');
+            } else {
+                this.showToast(`${file.name} 업로드 실패: ${result.message || '알 수 없는 오류'}`, 'error');
+            }
+        }
+
+        const uploadZone = document.querySelector(`[data-dropzone="${dropzone}"]`);
+        const input = uploadZone?.querySelector('input[type="file"]');
+        if (input) input.value = '';
+    } catch (error) {
+        console.error('업로드 오류:', error);
+        this.showToast('업로드 중 오류가 발생했습니다: ' + error.message, 'error');
+    } finally {
+        this.hideLoading();
     }
+}
+
     
     // 이미지를 리스트에 추가
     addImageToList(dropzone, url) {
@@ -1679,52 +1652,29 @@ class AdminCMS {
         return itemElement;
     }
     
-    // 미디어 아이템 이미지 업로드 처리
-    async handleMediaItemImageUpload(file, previewElement) {
-        if (!file) return;
-        
-        try {
-            this.showLoading();
-            
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            const response = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                // 업로드 존을 찾아서 dropzone 값 가져오기
-                const uploadZone = previewElement.closest('.accordion-item')?.querySelector('.image-upload-zone');
-                const dropzone = uploadZone?.dataset.dropzone;
-                
-                if (dropzone) {
-                    // addImageToList 함수를 사용해서 일관성 있게 처리
-                    this.addImageToList(dropzone, result.url);
-                } else {
-                    console.error('dropzone을 찾을 수 없습니다');
-                }
-                
-                this.showToast('이미지 업로드 성공', 'success');
-                
-                // 업로드 완료 후 input 리셋 (동일 파일 재업로드 가능하도록)
-                const input = uploadZone?.querySelector('input[type="file"]');
-                if (input) {
-                    input.value = '';
-                }
-            } else {
-                this.showToast('이미지 업로드 실패', 'error');
-            }
-        } catch (error) {
-            console.error('업로드 오류:', error);
-            this.showToast('업로드 중 오류가 발생했습니다', 'error');
-        } finally {
-            this.hideLoading();
+// 미디어 아이템 이미지 업로드 처리 (공통 업로드 함수 호출)
+async handleMediaItemImageUpload(file, previewElement) {
+    if (!file) return;
+    try {
+        this.showLoading();
+        const uploadZone = previewElement.closest('.accordion-item')?.querySelector('.image-upload-zone');
+        const dropzone = uploadZone?.dataset.dropzone;
+        if (!dropzone) {
+            console.error('dropzone을 찾을 수 없습니다');
+            return;
         }
+        await this.handleFileUpload([file], dropzone);
+
+        const input = uploadZone?.querySelector('input[type="file"]');
+        if (input) input.value = '';
+    } catch (error) {
+        console.error('업로드 오류:', error);
+        this.showToast('업로드 중 오류가 발생했습니다', 'error');
+    } finally {
+        this.hideLoading();
     }
+}
+
     
     // 채용 공고 렌더링
     renderCareerPosts() {
