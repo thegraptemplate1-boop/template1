@@ -1402,52 +1402,30 @@ async handleFileUpload(files, dropzone) {
         return cardElement;
     }
     
-    // 비즈니스 카드 이미지 업로드 처리
-    async handleBusinessCardImageUpload(file, previewElement) {
-        if (!file) return;
-        
-        try {
-            this.showLoading();
-            
-            const formData = new FormData();
-            formData.append('file', file);
-            
-            const response = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                // 업로드 존을 찾아서 dropzone 값 가져오기
-                const uploadZone = previewElement.closest('.card-item')?.querySelector('.image-upload-zone');
-                const dropzone = uploadZone?.dataset.dropzone;
-                
-                if (dropzone) {
-                    // addImageToList 함수를 사용해서 일관성 있게 처리
-                    this.addImageToList(dropzone, result.url);
-                } else {
-                    console.error('dropzone을 찾을 수 없습니다');
-                }
-                
-                this.showToast('이미지 업로드 성공', 'success');
-                
-                // 업로드 완료 후 input 리셋 (동일 파일 재업로드 가능하도록)
-                const input = uploadZone?.querySelector('input[type="file"]');
-                if (input) {
-                    input.value = '';
-                }
-            } else {
-                this.showToast('이미지 업로드 실패', 'error');
-            }
-        } catch (error) {
-            console.error('업로드 오류:', error);
-            this.showToast('업로드 중 오류가 발생했습니다', 'error');
-        } finally {
-            this.hideLoading();
+    // 비즈니스 카드 이미지 업로드 처리 (공통 업로드 함수 호출)
+async handleBusinessCardImageUpload(file, previewElement) {
+    if (!file) return;
+    try {
+        this.showLoading();
+        const uploadZone = previewElement.closest('.card-item')?.querySelector('.image-upload-zone');
+        const dropzone = uploadZone?.dataset.dropzone;
+        if (!dropzone) {
+            console.error('dropzone을 찾을 수 없습니다');
+            return;
         }
+        await this.handleFileUpload([file], dropzone);
+
+        const input = uploadZone?.querySelector('input[type="file"]');
+        if (input) input.value = '';
+
+    } catch (error) {
+        console.error('업로드 오류:', error);
+        this.showToast('업로드 중 오류가 발생했습니다', 'error');
+    } finally {
+        this.hideLoading();
     }
+}
+
     
     // 비즈니스 카드 위로 이동
     moveBusinessCardUp(cardElement) {
@@ -1667,6 +1645,7 @@ async handleMediaItemImageUpload(file, previewElement) {
 
         const input = uploadZone?.querySelector('input[type="file"]');
         if (input) input.value = '';
+
     } catch (error) {
         console.error('업로드 오류:', error);
         this.showToast('업로드 중 오류가 발생했습니다', 'error');
