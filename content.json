@@ -1,7 +1,7 @@
 {
   "meta": {
     "version": "1.0.0",
-    "lastModified": "2025-10-17T07:18:07.214Z",
+    "lastModified": "2025-10-17T07:18:39.501Z",
     "modifiedBy": "admin",
     "backup": {
       "auto": true,
@@ -14,7 +14,7 @@
       {
         "id": "hero-1",
         "title": "텍스트는 반영이 되나?",
-        "subtitle": "매핑, 모델링, 워크플로 자동화",
+        "subtitle": "반영이 되네?",
         "background": "https://vercel.pilloment.com/uploads/1760685419335-Security_FFFFF.mp4",
         "active": true,
         "order": 1
