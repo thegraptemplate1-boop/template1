@@ -1,7 +1,7 @@
 {
   "meta": {
     "version": "1.0.0",
-    "lastModified": "2025-10-17T07:17:04.347Z",
+    "lastModified": "2025-10-17T07:18:07.214Z",
     "modifiedBy": "admin",
     "backup": {
       "auto": true,
@@ -13,7 +13,7 @@
     "slides": [
       {
         "id": "hero-1",
-        "title": "효율적으로<br>설계하고 계획하다",
+        "title": "텍스트는 반영이 되나?",
         "subtitle": "매핑, 모델링, 워크플로 자동화",
         "background": "https://vercel.pilloment.com/uploads/1760685419335-Security_FFFFF.mp4",
         "active": true,
