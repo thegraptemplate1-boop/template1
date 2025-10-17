@@ -209,7 +209,7 @@ class AdminCMS {
             this.showLoading();
             console.log('로그인 시도 중...', { password: password ? '***' : 'empty' });
             
-            const response = await fetch('/auth/verify', {
+            const response = await fetch('/api/auth/verify', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
